@@ -11,17 +11,20 @@ turned up as a DSi system utility.
 ## Status
 
 <!-- progress:start -->
-**54 / 1551 functions matched (3.5%)**  `[--------------------]`
-964 / 166948 bytes (0.6%)
+**55 / 1551 functions matched (3.5%)**  `[--------------------]`
+994 / 166948 bytes (0.6%)
 <!-- progress:end -->
 
 (regenerate with `python tools/progress.py --write-readme`; needs a local
 `extracted/` - see Setup below. The total is Ghidra's current function count,
 not a precise figure - see [notes/pictochat-layout.md](notes/pictochat-layout.md).)
 
-2 functions were hand-written from scratch (`src/arm7/FUN_022c8268.c`, the
-first toolchain-verification target, and `src/arm9/FUN_02000e78.c`, the
-ARM946E MPU/cache/TCM system-setup routine run once from crt0); 26 were
+3 functions were hand-written from scratch (`src/arm7/FUN_022c8268.c`, the
+first toolchain-verification target; `src/arm9/FUN_02000e78.c`, the
+ARM946E MPU/cache/TCM system-setup routine run once from crt0; and
+`src/arm9/FUN_02325c2c.c`, an all-zero-word check whose exact instruction
+selection wasn't reachable through any plain-C rephrasing - see
+notes/tooling.md's inline-asm section); 26 were
 cross-matched for free from `sm64ds-decomp`'s already-verified SDK runtime
 code (`CP15`/`IRQ` hardware-abstraction-layer primitives, fast-copy helpers)
 - see [notes/cross-project-matching.md](notes/cross-project-matching.md); 26

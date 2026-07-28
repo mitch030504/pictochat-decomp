@@ -232,6 +232,86 @@ real structural difference (what you need to fix by hand). Use this instead
 of `match.py`'s plain pass/fail once you're iterating on something that's
 close but not there yet.
 
+## The `pop {...,pc}` fold puzzle
+
+A recurring near-miss shape: a candidate matches target instruction-for-
+instruction (same operations, same order, sometimes even the same byte
+count) except the target's last instruction is a folded `pop {r4-r7,pc}`
+while the candidate always emits a separate `pop {r4-r7}` + `bx lr`. This
+isn't a source-structure issue - synthetic single-return, zero-branch test
+functions reproduce it too - and it isn't rare: of the functions matched via
+`tools/templates.py` and the manual loop so far, **none** compile to the
+fold form under this project's pinned flags
+(`-O4,p` = `-opt level=4 -opt speed`; check with `mwccarm -help opt=O4`).
+
+Switching to `-O4,s` (`-opt space`) reliably produces the fold in synthetic
+tests, and re-validating all currently-matched functions under `-O4,s`
+instead of `-O4,p` leaves the great majority still matching byte-identical
+(as of the 54-function checkpoint, 51/54 - the 3 regressions were unrelated
+trivial-template/anomaly cases). So `-O4,s` is a real, safe-to-try lever,
+**not** a free fix: on two real fold-blocked near-misses
+(`FUN_02323d44`, `FUN_0232dbd0`) it changed *other* codegen choices too
+(register allocation, prologue shape, or in one case introduced an
+unrelated fixed 6-byte NOP trailer present at every `-O1`-`-O4,s` level
+alike, so unrelated to the fold at all) rather than landing a byte-exact
+match outright. Treat an `-O4,s` recompile as a fresh iteration starting
+point for a fold-blocked candidate - re-derive the exact source shape
+against the new flag's behavior rather than expecting the `-O4,p`-tuned
+source to carry over unchanged.
+
+Until a specific function's fold is actually cracked, the cheap workaround
+is avoidance: before drafting a candidate, check the target's own real
+tail bytes (`tools/disasm.py`) and prefer functions that already end in
+separate `pop`+`bx lr` (the vast majority) over ones ending in the fold.
+
+## Ghidra's function size can exclude a trailing literal pool
+
+Second recurring near-miss shape: a candidate compiles to *more* bytes than
+the target even though every real instruction matches. Ghidra's cached
+function boundary (what `tools/funcs.py`'s `f["size"]` reports) is based on
+code-flow analysis, not a linker symbol table (the shipped binary has none)
+- so for a function whose `ldr rX,[pc,#N]` pool constants live physically
+after its last `bx lr`/`pop`, Ghidra sometimes draws the boundary right at
+the return and silently excludes the pool. `FUN_02000e78.c` hit this first
+(its comment documents a 48-byte trailing pool past a 184-byte Ghidra
+boundary - true size 232, not 184). `FUN_023226d4` hit it again this
+session: Ghidra said 46 bytes, but `tools/disasm.py` on the bytes just past
+that boundary showed the exact same alignment-NOP + pool-word pattern an
+isolated single-function compile of the same source produces, confirming
+the real function is 56 bytes (0x38), not 46 (0x2e).
+
+If a candidate is consistently N bytes *too long* and every instruction up
+to the target's declared end already matches, don't assume the source is
+wrong - check `tools/disasm.py --addr <target_end> --length 0x10` first.
+If it decodes as an alignment NOP followed by recognizable pool
+constant(s), use the corrected size (round up to include them) as `--size`
+instead of trusting the Ghidra cache verbatim.
+
+## Inline asm: bare mnemonics, and match.py's `-thumb`-stripping heuristic
+
+Two gotchas hit while hand-writing an exact instruction sequence for a
+Thumb near-miss unmovable by any plain-C rephrasing or optimization flag
+(see the fold puzzle above for the general shape of this problem):
+
+- mwccarm's inline assembler wants **bare** mnemonics even for Thumb1 forms
+  that inherently set flags and disassemble with an implicit `s` - write
+  `mov`/`add`/`sub`/`orr`/`asr`/... not `movs`/`adds`/`subs`/`orrs`/`asrs`/...
+  The encoding is identical either way (Thumb1 `movs` and ARM-syntax `mov`
+  in this context assemble to the same bits); the `s` form is simply not
+  accepted as *input* syntax by this assembler, only produced by the
+  disassembler reading it back. Numeric local labels (`1f`/`1b`/`0:`) also
+  aren't accepted - use named labels (`Lbody:`, `b Lbody`) instead.
+- `tools/match.py`'s CLI auto-strips `-thumb` from the compile flags
+  whenever the source text contains the literal word `asm` (see
+  `main()`'s `-thumb`-stripping block) - a heuristic for the CP15-style
+  ARM-mode asm functions like `FUN_02000e78.c`, where `-thumb` would make
+  mwccarm reject coprocessor instructions. That heuristic is wrong for a
+  Thumb-mode function whose inline asm is itself genuinely Thumb code -
+  compiling it in ARM mode instead just produces confusing "illegal
+  operand" errors. Pass `--flags "..."` explicitly (copy `DEFAULT_FLAGS`
+  from `tools/match.py` verbatim, keeping `-thumb`) to override the
+  heuristic for this case.
+
 ## tools/nonmatching.py
 
 The park hatch for a function that's logic-correct (compiles, and the oracle
