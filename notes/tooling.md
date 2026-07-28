@@ -21,11 +21,18 @@ the map of what exists and when to reach for each one.
    project's already-verified code (SDK/runtime primitives that get linked in
    byte-identical regardless of the game). See
    [cross-project-matching.md](cross-project-matching.md).
-3. **`tools/templates.py --apply`** - free matches from trivial leaf shapes
-   (empty stubs, constant/argument returns, single-field get/set, two-arg
-   arithmetic, simple global getters) - no hand-writing needed, every
+3. **`tools/templates.py --apply --extend 0x10`** - free matches from trivial
+   leaf shapes (empty stubs, constant/argument returns, single-field get/set,
+   two-arg arithmetic, simple global getters) - no hand-writing needed, every
    candidate is oracle-verified before banking. Cheap to re-run periodically
-   as more functions get discovered.
+   as more functions get discovered. Always pass `--extend` (see its section
+   below) - a one-off run without it missed 31 real matches this session,
+   purely because Ghidra's cached size cut off before each one's trailing
+   literal pool.
+3b. **`tools/find_duplicates.py --apply`** - free matches for any function
+   byte-identical to an already-matched one (real example: two functions
+   this session turned out to be exact copies of each other). Cheap, worth
+   running after every batch of new matches, not just once.
 4. **Pick a real target** and read it: `tools/disasm.py` for a quick look.
    For anything past a few instructions, **`tools/m2c_draft.py`** and
    **`tools/ghidra_draft.py`** each give a real semantic C draft to start
@@ -88,6 +95,60 @@ those are gated to ARM-mode targets only (`ARM_ONLY_RULES`).
 
 Every proposed candidate is compiled and byte-diffed before being reported,
 so a rule misfiring just means "no candidate," never a wrong one.
+
+**`--extend N`**: also retries every rule against windows up to N bytes
+*larger* than Ghidra's cached size, reading the extra bytes straight from
+the ROM (`rom_bytes()`) rather than trusting `extracted/pictochat_funcs.json`
+verbatim. This exists because of a real, recurring bug: Ghidra's function
+boundary is code-flow-derived, not from a real linker symbol table (this
+ROM has none), so for a leaf like `rule_pool_const`'s `ldr r0,[pc,#0]; bx
+lr; .word G` shape, Ghidra sometimes draws the boundary right at `bx lr`
+and silently excludes the trailing pool word - the rule then never fires
+because the cached bytes are too short to see the `.word`. One `--extend
+0x10` pass across the whole project found and banked **31 previously-
+invisible matches** this way (mostly `global_getter`/`global_setter`/
+`global_store_const`), on top of `templates.py`'s normal count. Cheap to
+re-run periodically (same as the base scan), and safe: every hit is still
+compiled and byte-diffed at whatever size actually matched (which may
+differ from `extracted/pictochat_funcs.json` and is what gets banked -
+`main()`'s hit records carry the corrected size, not the cached one)
+before being reported, so a rule misfiring at some extended size just
+means no candidate at that size, same as the base scan.
+
+Don't confuse this with the OTHER Ghidra-undercounting failure mode this
+project has hit repeatedly on hand-matched (non-template) functions - a
+trailing pool AFTER a `bx lr`/`pop`, or case bodies past an unresolved
+jump-table dispatch (see "Ghidra's function size can exclude a trailing
+literal pool" below). `--extend` only helps the *template* tier, where a
+byte-pattern rule can cheaply re-check a wider window; for a hand-drafted
+candidate hitting the same root cause, find the true size manually the
+way that section describes.
+
+### tools/find_duplicates.py
+
+Groups every Ghidra-known function by raw byte content - a function
+compiled from a genuinely identical body anywhere else in the ROM is byte-
+identical to it (real example: `FUN_0232df74` turned out to be an exact
+copy of `FUN_0232df40`, banked for zero extra work). A group with an
+already-matched member makes every other member free: same source, new
+`// decomp:` marker, still re-verified through the normal compile+compare
+oracle before banking (`--apply` does this automatically; dry-run just
+reports).
+
+**Guards against a sharp false-positive edge**: the exact same Ghidra
+undercounting bug that motivates `templates.py --extend` also **creates
+fake duplicate groups**. A pool-const getter's cached bytes are just `ldr
+r0,[pc,#0]; bx lr` with the differentiating pool word truncated off - so
+ten completely different global-pointer getters, each returning a
+different global, all look byte-identical by that truncated cache. Banking
+one as the "seed" for the rest would have produced nine plausible-looking
+but silently wrong matches (`tools/match.py` would only ever check the 4
+cached bytes, never the pool word that's the actual point of the
+function). `false_duplicate()` catches this by reading `size + 16` bytes
+straight from the ROM for every group member before trusting the group -
+a real duplicate stays identical there too; a false one diverges
+immediately. Concretely: of 30 raw "duplicate" groups found this session,
+**25 were false positives** from exactly this bug - only 5 were real.
 
 ## tools/m2c_draft.py
 

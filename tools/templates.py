@@ -752,7 +752,25 @@ def is_thunk(ins):
     return any(i.mnemonic == "bx" and squash(i.op_str) != "lr" for i in ins)
 
 
-def scan(module_filter, min_size, max_size, mode_filter):
+def rom_bytes(module, addr, length):
+    """Raw ROM bytes for a function, independent of Ghidra's cached size -
+    see scan()'s `extend` parameter for why this matters."""
+    rel_path, base = M.MODULES[module]
+    path = M.DSD_EXTRACT / rel_path
+    data = path.read_bytes()
+    off = addr - base
+    return data[off:off + length]
+
+
+def scan(module_filter, min_size, max_size, mode_filter, extend=0):
+    """Find template-matchable functions. `extend`: also retry, past the
+    Ghidra-cached size, at every 2-byte-larger window up to +extend bytes
+    read straight from the ROM (see notes/tooling.md's "Ghidra's function
+    size can exclude a trailing literal pool" - a real, recurring cause of
+    rules like rule_pool_const missing an otherwise-exact shape purely
+    because the cached size cuts off before the trailing pool word). Each
+    hit records the SIZE that actually matched, which may differ from the
+    Ghidra cache - callers must use hit size, not f["size"], when banking."""
     done = L.load_done()
     hits = []
     for f in F.load_funcs():
@@ -766,22 +784,28 @@ def scan(module_filter, min_size, max_size, mode_filter):
             continue
         if (f["module"], f["addr"]) in done:
             continue
-        tgt = F.target_bytes(f)
         md = MD.get(f["mode"])
         if md is None:
             continue
-        ins = list(md.disasm(tgt, 0))
-        if not ins or is_thunk(ins):
-            continue
-        rules = RULES + ARM_ONLY_RULES if f["mode"] == "arm" else RULES
-        for rule in rules:
-            cand = rule(f["name"], ins, tgt)
-            if not cand:
+
+        sizes = [f["size"]] + (list(range(f["size"] + 2, f["size"] + extend + 1, 2)) if extend else [])
+        for size in sizes:
+            tgt = F.target_bytes(f) if size == f["size"] else rom_bytes(f["module"], f["addr"], size)
+            ins = list(md.disasm(tgt, 0))
+            if not ins or is_thunk(ins):
                 continue
-            csrc, label = cand
-            if oracle_ok(csrc, f["name"], tgt, f["module"], f["mode"]):
-                hits.append((f, csrc, label))
-                break
+            rules = RULES + ARM_ONLY_RULES if f["mode"] == "arm" else RULES
+            for rule in rules:
+                cand = rule(f["name"], ins, tgt)
+                if not cand:
+                    continue
+                csrc, label = cand
+                if oracle_ok(csrc, f["name"], tgt, f["module"], f["mode"]):
+                    hits.append((dict(f, size=size), csrc, label))
+                    break
+            else:
+                continue
+            break
     return hits
 
 
@@ -793,12 +817,17 @@ def main():
     ap.add_argument("--mode", default=None, choices=["arm", "thumb"])
     ap.add_argument("--apply", action="store_true", help="bank wins via tools/ledger.py")
     ap.add_argument("--verbose", action="store_true", help="print each win's C")
+    ap.add_argument("--extend", type=lambda x: int(x, 0), default=0,
+                     help="also retry past the Ghidra-cached size, up to this many extra "
+                          "bytes read from the ROM (catches rule_pool_const etc. missing a "
+                          "trailing literal pool Ghidra's boundary excluded - see notes/tooling.md)")
     args = ap.parse_args()
 
     print(f"scanning unmatched functions (size 0x{args.min:x}-0x{args.max:x}"
           f"{', module ' + args.module if args.module else ''}"
-          f"{', mode ' + args.mode if args.mode else ''})...")
-    hits = scan(args.module, args.min, args.max, args.mode)
+          f"{', mode ' + args.mode if args.mode else ''}"
+          f"{', extend +0x' + format(args.extend, 'x') if args.extend else ''})...")
+    hits = scan(args.module, args.min, args.max, args.mode, args.extend)
 
     by_label = {}
     for f, csrc, label in hits:

@@ -11,8 +11,8 @@ turned up as a DSi system utility.
 ## Status
 
 <!-- progress:start -->
-**65 / 1551 functions matched (4.2%)**  `[--------------------]`  (2 more parked NONMATCHING - logic-correct, not byte-exact)
-1440 / 166948 bytes (0.9%)
+**96 / 1551 functions matched (6.2%)**  `[#-------------------]`  (2 more parked NONMATCHING - logic-correct, not byte-exact)
+1646 / 166948 bytes (1.0%)
 <!-- progress:end -->
 
 (regenerate with `python tools/progress.py --write-readme`; needs a local
@@ -24,7 +24,7 @@ first toolchain-verification target, and `src/arm9/FUN_02000e78.c`, the
 ARM946E MPU/cache/TCM system-setup routine run once from crt0); 26 were
 cross-matched for free from `sm64ds-decomp`'s already-verified SDK runtime
 code (`CP15`/`IRQ` hardware-abstraction-layer primitives, fast-copy helpers)
-- see [notes/cross-project-matching.md](notes/cross-project-matching.md); 26
+- see [notes/cross-project-matching.md](notes/cross-project-matching.md); 57
 more came free from `tools/templates.py`'s self-verifying template tier
 (leaf shapes: empty stubs, field get/set, bitfields, global getters/
 setters, small struct copies and multi-field initializers - see
