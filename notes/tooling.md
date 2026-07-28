@@ -287,11 +287,36 @@ If it decodes as an alignment NOP followed by recognizable pool
 constant(s), use the corrected size (round up to include them) as `--size`
 instead of trusting the Ghidra cache verbatim.
 
-## Inline asm: bare mnemonics, and match.py's `-thumb`-stripping heuristic
+## Inline asm is not a shortcut for ordinary application logic
 
-Two gotchas hit while hand-writing an exact instruction sequence for a
-Thumb near-miss unmovable by any plain-C rephrasing or optimization flag
-(see the fold puzzle above for the general shape of this problem):
+It's tempting, once a candidate is byte-for-byte identical to the target
+except for one compiler-scheduling choice (an instruction order a dozen
+plain-C rephrasings won't reproduce), to just hand-write the exact target
+instruction sequence as inline asm and call it matched. **Don't, for
+normal application code.** It technically passes `tools/match.py`, but it
+isn't decompilation - it's re-encoding the same bytes in a different
+syntax, and defeats the actual point of this project: source a human can
+read as an honest account of what the function does. This was tried and
+reverted for two ordinary functions (an all-zero-word check, a linked-list
+append) this session - both got stuck on a two-or-three-instruction
+scheduling swap that no statement reordering reproduced, and asm was
+reached for instead of pushing further on the C or parking the function.
+
+`src/arm9/FUN_02000e78.c` is **not** a precedent for this - it's a
+different category. That function's "logic" is a fixed CP15/cache/MPU
+register-programming sequence where the instruction order essentially *is*
+the specification (mirrors sm64ds-decomp's own hand-asm `SystemSetup`
+equivalent); there's no higher-level C shape being discarded by writing it
+as asm, because there isn't a meaningfully different one. A linked-list
+insert or a loop, by contrast, has a real C shape, and if the compiler's
+scheduler won't reproduce the target's exact ordering, the right moves are
+(in order): try more source-level rephrasings, try decomp-permuter, try
+other flags/optimization levels, and only if genuinely stuck, park the
+function with `tools/nonmatching.py` rather than banking asm as if it were
+a match.
+
+If a genuine hardware/runtime-primitive case like `FUN_02000e78.c` does
+come up again, two mwccarm inline-asm gotchas are worth knowing up front:
 
 - mwccarm's inline assembler wants **bare** mnemonics even for Thumb1 forms
   that inherently set flags and disassemble with an implicit `s` - write

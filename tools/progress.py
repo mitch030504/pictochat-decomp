@@ -37,14 +37,36 @@ import ledger as L   # noqa: E402
 
 
 def matched_files():
-    """[(module_sub, path), ...] for every committed src/arm{9,7}/*.c[pp]."""
+    """[(module_sub, path), ...] for every committed src/arm{9,7}/*.c[pp] that
+    is actually byte-matched - excludes tools/nonmatching.py's parked files
+    (marked `// NONMATCHING:` right after the `// decomp:` marker), which are
+    logic-correct but explicitly NOT byte-exact and shouldn't count toward
+    "matched" (see nonmatching_files() for those)."""
     out = []
     for sub in ("arm9", "arm7"):
         d = SRC / sub
         if not d.is_dir():
             continue
         for p in sorted(list(d.glob("*.c")) + list(d.glob("*.cpp"))):
+            head = p.read_text(encoding="utf-8", errors="ignore")[:400]
+            if "// NONMATCHING:" in head:
+                continue
             out.append((sub, p))
+    return out
+
+
+def nonmatching_files():
+    """[(module_sub, path), ...] for every tools/nonmatching.py-parked file -
+    decompiled and logic-verified, but not byte-exact."""
+    out = []
+    for sub in ("arm9", "arm7"):
+        d = SRC / sub
+        if not d.is_dir():
+            continue
+        for p in sorted(list(d.glob("*.c")) + list(d.glob("*.cpp"))):
+            head = p.read_text(encoding="utf-8", errors="ignore")[:400]
+            if "// NONMATCHING:" in head:
+                out.append((sub, p))
     return out
 
 
@@ -87,16 +109,17 @@ def matched_stats():
     return n, total_bytes
 
 
-def render_bar(matched, total, matched_bytes, total_bytes):
+def render_bar(matched, total, matched_bytes, total_bytes, nonmatching):
+    nm_suffix = f"  ({nonmatching} more parked NONMATCHING - logic-correct, not byte-exact)" if nonmatching else ""
     if total is None:
-        return (f"**{matched} function(s) matched** (byte-exact). Total function count "
+        return (f"**{matched} function(s) matched** (byte-exact){nm_suffix}. Total function count "
                 f"needs a local Ghidra export (extracted/pictochat_funcs.json) to report - "
                 f"see notes/ghidra-setup.md.")
     pct = 100.0 * matched / total if total else 0.0
     bpct = (100.0 * matched_bytes / total_bytes) if total_bytes else 0.0
     filled = int(pct / 5)
     bar = "#" * filled + "-" * (20 - filled)
-    return (f"**{matched} / {total} functions matched ({pct:.1f}%)**  `[{bar}]`\n"
+    return (f"**{matched} / {total} functions matched ({pct:.1f}%)**  `[{bar}]`{nm_suffix}\n"
             f"{matched_bytes} / {total_bytes} bytes ({bpct:.1f}%)")
 
 
@@ -118,10 +141,11 @@ def main():
     args = ap.parse_args()
 
     matched, matched_b = matched_stats()
+    nonmatching = len(nonmatching_files())
     totals = totals_from_ghidra()
     total_n, total_b = totals if totals else (None, None)
 
-    block = render_bar(matched, total_n, matched_b, total_b)
+    block = render_bar(matched, total_n, matched_b, total_b, nonmatching)
 
     if args.write_readme:
         write_readme(block)
@@ -132,6 +156,8 @@ def main():
         return
 
     print(f"matched: {matched} function(s), {matched_b if matched_b is not None else '?'} bytes")
+    if nonmatching:
+        print(f"nonmatching (parked): {nonmatching} function(s)")
     if total_n is not None:
         print(f"total (Ghidra-known): {total_n} function(s), {total_b} bytes")
         print(f"progress: {100.0 * matched / total_n:.2f}% of functions, "

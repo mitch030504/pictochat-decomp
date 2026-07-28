@@ -108,13 +108,13 @@ def main():
     a.add_argument("--max-div", type=int, default=12)
     a.add_argument("--version", default=M.CANONICAL)
     a.add_argument("--flags", default=None)
-    a.set_defaults(func=add)
+    a.set_defaults(handler=add)
 
     s = sub.add_parser("stats")
-    s.set_defaults(func=stats)
+    s.set_defaults(handler=stats)
 
     args = ap.parse_args()
-    args.func(args)
+    args.handler(args)
 
 
 if __name__ == "__main__":
