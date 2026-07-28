@@ -125,7 +125,7 @@ project's own history, or ask another contributor for a patch file):
 Per-function workflow:
 ```
 python tools/permuter/import_func.py --module unk_autoload_0 --addr 0x02320a64 --base draft.c
-python vendor/decomp-permuter/permuter.py vendor/decomp-permuter/work/<name> --stop-on-zero -j 4
+python tools/permuter/winproc.py --secs 300 -- python vendor/decomp-permuter/permuter.py vendor/decomp-permuter/work/<name> --stop-on-zero -j 4
 ```
 `import_func.py` resolves the function from `tools/funcs.py` (not a
 `config/relocs.txt` symbol table, unlike sm64ds-decomp), writes the per-
@@ -133,6 +133,35 @@ function compile flags (module + ARM/Thumb aware - this project mixes both),
 and wires `tools/permuter/cap_objdump.py` (a capstone-based objdump
 replacement, so no external `arm-none-eabi-objdump` install is needed) as the
 scorer's disassembler.
+
+### Always run it through `tools/permuter/winproc.py`, never raw `timeout`
+
+`-j 4` spawns multiprocessing workers, each spawning its own
+`cap_objdump.py` -> `mwccarm.exe` subprocess. On Windows, killing a parent
+process does **not** kill its children - neither a shell `timeout N cmd`
+wrapper nor plain `subprocess.run(cmd, timeout=N)` reaches past the direct
+child, so the permuter's own worker processes (and *their* `mwccarm.exe`
+children) get orphaned and keep running indefinitely once the deadline
+passes. This is exactly what happened repeatedly in early sessions - `python.exe`
+and `mwccarm.exe` piling up long after a permuter run was reported "done".
+
+`tools/permuter/winproc.py` fixes this properly instead of relying on
+anyone remembering to clean up by hand: it assigns the launched process to a
+Windows Job Object with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`, so terminating
+the job (on timeout, on success, or on any exception) recursively kills the
+*entire* tree - direct child, its multiprocessing workers, and their
+subprocesses - in one kernel call, no cooperation required from any of them.
+No extra dependency (pure `ctypes` against `kernel32`).
+
+- CLI, for interactive/ad-hoc runs: `python tools/permuter/winproc.py --secs N -- <command...>`.
+- From Python (this is what `tools/permuter/batch.py` uses internally):
+  `winproc.run_bounded(cmd, secs=N, **popen_kwargs)`.
+
+Verified empirically: the same active `-j 4` workload left 5 orphaned
+`python.exe` processes running after a plain `subprocess.run(timeout=15)`
+call returned, versus zero with `winproc.run_bounded`. Never invoke
+`permuter.py` (directly or via `batch.py`) through a raw shell `timeout` or
+bare `subprocess` timeout again - always through `winproc`.
 
 For a pile of near-misses at once (drafts that compile but don't byte-match -
 often only coloring/ordering is off), use `tools/permuter/batch.py --seeds

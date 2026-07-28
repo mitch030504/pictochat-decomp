@@ -36,6 +36,7 @@ import ledger as L        # noqa: E402
 import match as M         # noqa: E402
 import templates as T      # noqa: E402
 import import_func as IMP  # noqa: E402
+import winproc              # noqa: E402
 
 
 def load_seeds(path):
@@ -58,18 +59,26 @@ def load_seeds(path):
 def run_permuter(out, secs):
     """Run the permuter under a time budget; return the score-0 source.c text,
     or None. Output goes to <dir>/permuter.log (not discarded) so a compile
-    error or scorer crash is diagnosable instead of looking like "no crack"."""
+    error or scorer crash is diagnosable instead of looking like "no crack".
+
+    Uses winproc.run_bounded() instead of a plain subprocess.run(timeout=)
+    call: the permuter's `-j 4` spawns multiprocessing workers, each of
+    which spawns its own cap_objdump.py/mwccarm.exe subprocess. On Windows,
+    subprocess's own timeout-kill only terminates the direct child - none of
+    that grandchild tree - so a plain timeout here silently leaves a pile of
+    python.exe/mwccarm.exe processes running forever after this function
+    returns. winproc wraps the launch in a Job Object so terminating it
+    always takes the whole tree with it, whether it finished, timed out, or
+    raised."""
     log = out / "permuter.log"
     try:
         with open(log, "w") as lf:
-            subprocess.run(
+            winproc.run_bounded(
                 [sys.executable, str(IMP.PERM_DIR / "permuter.py"), str(out),
                  "--stop-on-zero", "-j", "4"],
-                timeout=secs, cwd=str(IMP.PERM_DIR),
+                secs=secs, cwd=str(IMP.PERM_DIR),
                 stdout=lf, stderr=subprocess.STDOUT,
             )
-    except subprocess.TimeoutExpired:
-        pass
     except Exception as e:
         print(f"  (permuter run error: {e}; see {log})")
         return None
