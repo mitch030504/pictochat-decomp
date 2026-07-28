@@ -287,6 +287,21 @@ If it decodes as an alignment NOP followed by recognizable pool
 constant(s), use the corrected size (round up to include them) as `--size`
 instead of trusting the Ghidra cache verbatim.
 
+The same undercounting hits switch/jump-table functions too, for a
+different reason: Ghidra's code-flow analysis can't always statically
+resolve an indirect `add pc,rX` dispatch, so it stops the function right
+at the table instead of including the case bodies and default handler
+past it. `FUN_02329270` and `FUN_02329a08` both hit this. **Don't assume
+the true boundary is wherever the next function's first real instruction
+starts, though** - `FUN_02329a08`'s cached size (0x2a) undercounted by
+more than just the missing case bodies; the correct boundary (0x32) sits
+2 bytes *before* the next function's own first instruction (0x34), with
+one inter-function alignment NOP in between that belongs to neither
+function's own compiled output. Confirm the exact boundary empirically:
+try the size that ends right after the last real `bx lr`/`pop` first (a
+clean, zero-mismatch `tools/match.py` run confirms it), before assuming
+you need to include trailing bytes up to the next function.
+
 ## Inline asm is not a shortcut for ordinary application logic
 
 It's tempting, once a candidate is byte-for-byte identical to the target
