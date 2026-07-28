@@ -43,7 +43,9 @@ Every matched function is checked against the real binary with
 This repo contains only original work: the tooling, the hand-written C, and
 the notes. It contains no firmware dump, no ROM, and no extracted Nintendo
 assets - those are read locally from your own dumps and are git-ignored.
-Never commit anything derived from `assets/`.
+Never commit anything derived from `assets/`. `assets/pictochat.nds` has to
+be dumped from your own Nintendo DSi - see
+[notes/dumping-pictochat.md](notes/dumping-pictochat.md).
 
 ## Setup
 

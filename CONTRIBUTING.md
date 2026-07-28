@@ -12,7 +12,9 @@ You bring your own dumps. Nothing copyrighted lives in this repo.
    (`assets/bios7.bin`, `assets/bios9.bin`) - needed for the KEY1 tooling if
    you touch the firmware investigation side.
 2. **Your own copy of the PictoChat title** (`assets/pictochat.nds`) - the
-   actual decomp target.
+   actual decomp target. This has to be dumped from your own Nintendo DSi (or
+   DSi XL) - see [notes/dumping-pictochat.md](notes/dumping-pictochat.md) for
+   how, and why a dump from anywhere else doesn't work for this project.
 3. **mwccarm** - already checked out under `tools/mwccarm/` on this machine;
    see [notes/setup-mwccarm.md](notes/setup-mwccarm.md) if you need to set it
    up fresh elsewhere.
