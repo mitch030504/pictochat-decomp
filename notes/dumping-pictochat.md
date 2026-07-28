@@ -6,14 +6,16 @@ yourself, from a console you own, before any of the tooling here can run.
 
 ## What you need
 
-**A Nintendo DSi or DSi XL that you own.** Not a DS, DS Lite, DSi via a 3DS
-in DS-compatibility mode, or a 2DS/3DS - the version of PictoChat this
-project targets is specifically the **DSi system title**, factory-installed
-on every retail DSi/DSi XL as one of the built-in DSiWare-style apps (not the
-cartridge-based PictoChat that shipped on the original DS - that's a
-different binary and out of scope here). If you own a DSi, you already have
-a licensed copy of this exact title sitting in its NAND; nothing to buy or
-download.
+**A Nintendo DSi or DSi XL that you own.** Not a DS, DS Lite, 2DS, or 3DS -
+the version of PictoChat this project targets is specifically the **DSi
+system title**, factory-installed on every retail DSi/DSi XL as one of the
+built-in DSiWare-style apps. The original DS/DS Lite's PictoChat was never a
+cartridge product either - it was built into the DS's own system firmware
+(see [firmware-investigation.md](firmware-investigation.md) for this
+project's earlier attempt at that binary specifically) - but it's still a
+different build from the DSi system title targeted here, and out of scope
+for this doc. If you own a DSi, you already have a licensed copy of the DSi
+title sitting in its NAND; nothing to buy or download.
 
 ## Dumping it
 
