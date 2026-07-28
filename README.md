@@ -11,21 +11,22 @@ turned up as a DSi system utility.
 ## Status
 
 <!-- progress:start -->
-**44 / 1551 functions matched (2.8%)**  `[--------------------]`
-692 / 166948 bytes (0.4%)
+**46 / 1551 functions matched (3.0%)**  `[--------------------]`
+888 / 166948 bytes (0.5%)
 <!-- progress:end -->
 
 (regenerate with `python tools/progress.py --write-readme`; needs a local
 `extracted/` - see Setup below. The total is Ghidra's current function count,
 not a precise figure - see [notes/pictochat-layout.md](notes/pictochat-layout.md).)
 
-1 function was hand-written from scratch to verify the toolchain
-(`src/arm7/FUN_022c8268.c`); 25 were cross-matched for free from
-`sm64ds-decomp`'s already-verified SDK runtime code (`CP15`/`IRQ`
-hardware-abstraction-layer primitives, fast-copy helpers) - see
-[notes/cross-project-matching.md](notes/cross-project-matching.md); 18 more
-came free from `tools/templates.py`'s self-verifying template tier (trivial
-leaf shapes: empty stubs, field get/set, two-arg arithmetic - see
+2 functions were hand-written from scratch (`src/arm7/FUN_022c8268.c`, the
+first toolchain-verification target, and `src/arm9/FUN_02000e78.c`, the
+ARM946E MPU/cache/TCM system-setup routine run once from crt0); 26 were
+cross-matched for free from `sm64ds-decomp`'s already-verified SDK runtime
+code (`CP15`/`IRQ` hardware-abstraction-layer primitives, fast-copy helpers)
+- see [notes/cross-project-matching.md](notes/cross-project-matching.md); 18
+more came free from `tools/templates.py`'s self-verifying template tier
+(trivial leaf shapes: empty stubs, field get/set, two-arg arithmetic - see
 [notes/tooling.md](notes/tooling.md)). Everything from here is the
 CONTRIBUTING.md loop, function by function - `tools/m2c_draft.py` and
 decomp-permuter (see notes/tooling.md) help with the harder ones.
