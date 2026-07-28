@@ -65,17 +65,29 @@ filename convention alone can't tell the difference.
 
 ## tools/templates.py
 
-A trimmed port of sm64ds-decomp's `swarm.py` template-rule engine - just the
-leaf rules (empty/constant/argument-return, single-field load/store, two-arg
-arithmetic, simple `extern G[]` getters), not the C++-ABI rules (vtable/ctor/
-dtor chains), which need a populated `config/relocs.txt` to resolve callee
-names that this project doesn't have (see
+A port of sm64ds-decomp's `swarm.py` template-rule engine - every leaf rule
+there (the ones needing just `(name, ins, bytes)`, no relocs/symbol table):
+empty/constant/argument-return, field load/store/mask/bitfield, bit-test and
+bitop patterns, global getters/setters/swaps/indexed access, small fixed-size
+struct copies, multi-field constant initializers, and more (33 rules total -
+see the file for the full list). Not ported: the C++-ABI rules there
+(vtable/ctor/dtor chains, virtual/PMF calls) tuned to SM64DS's own class
+layouts, and everything needing callee-name resolution via a populated
+`config/relocs.txt`, which this project doesn't have (see
 [pictochat-layout.md](pictochat-layout.md) - `dsd init` never finishes for
-this ROM). Mode-aware: tries each rule against the target's own ARM or Thumb
-encoding (the `mode` field in `extracted/pictochat_funcs.json`), unlike
-sm64ds-decomp's ARM-only version. Every proposed candidate is compiled and
-byte-diffed before being reported, so a rule misfiring just means "no
-candidate," never a wrong one.
+this ROM).
+
+Mode-aware: tries each rule against the target's own ARM or Thumb encoding
+(the `mode` field in `extracted/pictochat_funcs.json`), unlike sm64ds-decomp's
+ARM-only version - Thumb mnemonics that implicitly set flags (`movs`/`adds`/
+`ands`/...) are normalized to their ARM equivalents so one rule covers both
+encodings. A few rules key on ARM's per-instruction condition codes
+(`moveq`/`movne`, used for the classic "compare then materialize 0/1" idiom)
+that don't exist in Thumb1 on this ARMv5TE-era ROM (no IT-block support) -
+those are gated to ARM-mode targets only (`ARM_ONLY_RULES`).
+
+Every proposed candidate is compiled and byte-diffed before being reported,
+so a rule misfiring just means "no candidate," never a wrong one.
 
 ## tools/m2c_draft.py
 

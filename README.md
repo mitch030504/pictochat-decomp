@@ -11,8 +11,8 @@ turned up as a DSi system utility.
 ## Status
 
 <!-- progress:start -->
-**46 / 1551 functions matched (3.0%)**  `[--------------------]`
-888 / 166948 bytes (0.5%)
+**54 / 1551 functions matched (3.5%)**  `[--------------------]`
+964 / 166948 bytes (0.6%)
 <!-- progress:end -->
 
 (regenerate with `python tools/progress.py --write-readme`; needs a local
@@ -24,9 +24,10 @@ first toolchain-verification target, and `src/arm9/FUN_02000e78.c`, the
 ARM946E MPU/cache/TCM system-setup routine run once from crt0); 26 were
 cross-matched for free from `sm64ds-decomp`'s already-verified SDK runtime
 code (`CP15`/`IRQ` hardware-abstraction-layer primitives, fast-copy helpers)
-- see [notes/cross-project-matching.md](notes/cross-project-matching.md); 18
+- see [notes/cross-project-matching.md](notes/cross-project-matching.md); 26
 more came free from `tools/templates.py`'s self-verifying template tier
-(trivial leaf shapes: empty stubs, field get/set, two-arg arithmetic - see
+(leaf shapes: empty stubs, field get/set, bitfields, global getters/
+setters, small struct copies and multi-field initializers - see
 [notes/tooling.md](notes/tooling.md)). Everything from here is the
 CONTRIBUTING.md loop, function by function - `tools/m2c_draft.py` and
 decomp-permuter (see notes/tooling.md) help with the harder ones.
