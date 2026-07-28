@@ -284,6 +284,32 @@ landing on it by luck. So far the whole `dsi/` family is codegen-identical
 for every construct in the default probe file - feed it something more
 unusual if you want to actually narrow the pin down.
 
+## tools/match.py's relocation wildcarding had an alignment bug
+
+Fixed this session: `extract_func()` marked a relocation's compare-word as
+`o & ~3` (round the reloc's byte offset down to the enclosing 4-byte word)
+and wildcarded only that one word. That's wrong whenever the relocation
+itself doesn't start on a 4-byte boundary - a Thumb `bl`/`R_ARM_THM_CALL`
+relocation is 4 bytes wide but can legitimately start at a 2-mod-4 offset
+inside a function (there's no requirement that call instructions land on
+word boundaries), in which case its second half spills into the *next*
+4-byte word, which was real-compared instead of wildcarded. Concretely: a
+function calling the same helper three times back-to-back can have its
+third `bl` start 2 bytes into a word - that call's true target-address
+encoding was being byte-compared against a placeholder, guaranteeing a
+spurious 1-word mismatch no matter how correct the C was. `extract_func()`
+now adds both `o & ~3` and `(o+3) & ~3` per relocation, covering both
+words a straddling reloc can touch.
+
+This can only have caused **false rejections**, never false acceptances -
+wildcarding too little makes the check stricter, not more lenient, so
+nothing already banked is affected. But it means some function you tried
+earlier and set aside as "close, 1 word off, couldn't figure out why"
+might have actually been correct - worth a second look with `--all` (or
+even just re-running the same candidate) now that this is fixed, especially
+for anything that calls the same helper multiple times or otherwise has a
+`bl` landing at an odd position.
+
 ## tools/fdiff.py
 
 Like `tools/match.py` but always verbose: a per-instruction table showing

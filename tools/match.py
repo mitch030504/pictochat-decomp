@@ -121,7 +121,14 @@ def extract_func(obj: bytes, func: str):
         for r in rel.iter_relocations():
             o = r["r_offset"] - start
             if 0 <= o < size:
+                # Relocations are 4 bytes wide (BL/data-pointer) but not always
+                # 4-byte aligned within the function (a Thumb BL can start at
+                # a 2-mod-4 offset) - wildcard every compare() word the
+                # relocation's own [o, o+4) span touches, not just the one
+                # o rounds down to, or the far half of a straddling reloc
+                # gets real-compared and spuriously mismatches.
                 relocs.add(o & ~3)
+                relocs.add((o + 3) & ~3)
     return code, relocs
 
 
