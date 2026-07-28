@@ -8,13 +8,19 @@ real binary.
 
 You bring your own dumps. Nothing copyrighted lives in this repo.
 
-1. **Your own firmware dump** (`assets/firmware.bin`) and **BIOS dumps**
-   (`assets/bios7.bin`, `assets/bios9.bin`) - needed for the KEY1 tooling if
-   you touch the firmware investigation side.
-2. **Your own copy of the PictoChat title** (`assets/pictochat.nds`) - the
+1. **Your own copy of the PictoChat title** (`assets/pictochat.nds`) - the
    actual decomp target. This has to be dumped from your own Nintendo DSi (or
    DSi XL) - see [notes/dumping-pictochat.md](notes/dumping-pictochat.md) for
    how, and why a dump from anywhere else doesn't work for this project.
+2. **Your own ARM7 BIOS dump** (`assets/bios7.bin`) - `tools/extract_pictochat.py`
+   needs it for two things: `dsd`'s real multi-segment extraction (`--arm7-bios`)
+   and reconstructing this digital title's zeroed KEY1 secure-area placeholder
+   (see the module's own docstring, and
+   [notes/pictochat-layout.md](notes/pictochat-layout.md)). Without it, only the
+   flat/wrong-layout extraction runs, which isn't good enough to match against.
+   `assets/firmware.bin` and `assets/bios9.bin` are **not** needed for PictoChat
+   matching - those are only for the separate, currently-parked firmware
+   investigation (see [notes/firmware-investigation.md](notes/firmware-investigation.md)).
 3. **mwccarm** - already checked out under `tools/mwccarm/` on this machine;
    see [notes/setup-mwccarm.md](notes/setup-mwccarm.md) if you need to set it
    up fresh elsewhere.

@@ -49,8 +49,11 @@ be dumped from your own Nintendo DSi - see
 
 ## Setup
 
-You supply your own firmware dump and PictoChat title (both git-ignored under
-`assets/`). This repo already has a verified `mwccarm` toolchain checked out
+You supply your own PictoChat title and ARM7 BIOS dump (both git-ignored
+under `assets/pictochat.nds` and `assets/bios7.bin` - see
+[notes/dumping-pictochat.md](notes/dumping-pictochat.md); no firmware dump
+needed unless you're picking up the separate, parked firmware investigation).
+This repo already has a verified `mwccarm` toolchain checked out
 (see [notes/setup-mwccarm.md](notes/setup-mwccarm.md) - no Discord round-trip
 needed unless you're starting fresh on a new machine).
 
@@ -69,7 +72,7 @@ both optional, `vendor/` is git-ignored).
 ## Project layout
 
 ```
-assets/            your own dumps (firmware.bin, bios7/9.bin, pictochat.nds) - gitignored
+assets/            your own dumps: pictochat.nds + bios7.bin required, firmware.bin/bios9.bin only for the parked firmware investigation - gitignored
 extracted/         unpacked binaries, derived from assets/ - gitignored
 ghidra_project/    Ghidra analysis database - gitignored, see notes/ghidra-setup.md
 vendor/            cloned third-party tools (m2c, decomp-permuter) - gitignored, see notes/tooling.md

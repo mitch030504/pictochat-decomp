@@ -45,9 +45,18 @@ Downloading someone else's dump (from an archive site, a forum, a torrent,
 etc.) is redistribution of Nintendo's copyrighted software, not a personal
 backup, and archive sites hosting ROM dumps aren't a legal source just
 because they're online - Nintendo actively pursues takedowns of exactly this
-material. It's also unverifiable: this project's matching standard depends
-on comparing
-against *your* real binary, and a dump from an unknown source could be
-patched, corrupted, or simply mislabeled. Dumping your own title from your
+material. It's also unverifiable: this project's matching standard depends on
+comparing against *your* real binary, and a dump from an unknown source could
+be patched, corrupted, or simply mislabeled. Dumping your own title from your
 own hardware is the only way this project's legal stance (and its
 correctness guarantee) actually holds.
+
+## One more file you'll need
+
+`pictochat.nds` alone isn't quite enough to get the real, correctly-laid-out
+extraction (see [pictochat-layout.md](pictochat-layout.md)) - you also need
+your own **ARM7 BIOS dump** (`assets/bios7.bin`), used for `dsd`'s
+`--arm7-bios` flag and to reconstruct this digital title's KEY1 secure-area
+placeholder. See [CONTRIBUTING.md](../CONTRIBUTING.md) for the full list of
+what's required versus what's only needed for the separate firmware
+investigation.
