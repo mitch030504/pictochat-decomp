@@ -26,11 +26,11 @@ the map of what exists and when to reach for each one.
    arithmetic, simple global getters) - no hand-writing needed, every
    candidate is oracle-verified before banking. Cheap to re-run periodically
    as more functions get discovered.
-4. **Pick a real target** and read it: `tools/disasm.py` for a quick look, or
-   `ghidra_project/` for the decompiler view (a *reading* aid, not a matching
-   one). For anything past a few instructions, **`tools/m2c_draft.py`** gives
-   a real semantic C draft (control flow, callee/global references) to start
-   hand-writing a candidate from - see the m2c section below.
+4. **Pick a real target** and read it: `tools/disasm.py` for a quick look.
+   For anything past a few instructions, **`tools/m2c_draft.py`** and
+   **`tools/ghidra_draft.py`** each give a real semantic C draft to start
+   hand-writing a candidate from - see their sections below for why it's
+   worth having both, not just one.
 5. **Iterate** with `tools/match.py` (pass/fail + full diff) or
    **`tools/fdiff.py`** (always shows the per-instruction diff, with a note
    on which mismatches are "same shape, different register" - i.e.
@@ -93,6 +93,36 @@ callee/global references show as `func_<addr>` / raw hex instead of real
 symbol names (still useful, just less self-documenting); and very large
 functions can still trip the pc-relative-pool-window heuristic on unusual
 layouts (see `_window()` in the file).
+
+## tools/ghidra_draft.py
+
+Runs Ghidra's own decompiler (the mature, SSA-based one, via `pyghidra`
+against `ghidra_project/` - see [ghidra-setup.md](ghidra-setup.md)) for one
+function and prints its C. Same disclaimer as m2c: a reading aid, not a
+matching candidate, won't compile under `mwccarm` as-is.
+
+Worth pulling **both** this and `m2c_draft.py` rather than picking one -
+they fail differently. `m2c`'s capstone-based lifting is more literal
+(closer to the raw instruction sequence, which sometimes helps for
+scheduling-sensitive code) but can badly mangle local stack structs/arrays;
+Ghidra's decompiler models those correctly far more often, at the cost of
+sometimes restructuring control flow further from what you actually have to
+reproduce. Concretely: for `FUN_02321940`, `m2c_draft.py` produced a bogus
+`&subroutine_arg0 - 4` pointer expression where a local stack array was
+actually being passed by address - `ghidra_draft.py` got that one right
+(`auStack_28`).
+
+Deliberately **not** a batch-export-everything tool - see the module's own
+docstring for why (most of a 1500-function backlog never gets looked at in
+a given pass, so drafting it all up front is wasted, staleness-prone work).
+Run it per function as you pick targets, same as `m2c_draft.py`. It's slower
+to start than `m2c_draft.py` (a JVM + Ghidra project load per invocation,
+not m2c's near-instant pure-Python pipeline) - expect several seconds.
+
+```
+python tools/ghidra_draft.py --name FUN_02321940
+python tools/ghidra_draft.py --module arm7 --addr 0x022ce8b0
+```
 
 ## decomp-permuter
 
