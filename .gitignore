@@ -1,0 +1,59 @@
+# --- Copyrighted material: NEVER commit ---
+# The firmware dump, the PictoChat title, and anything extracted/derived from
+# them stays local. The repo holds only our own original work (scripts,
+# hand-written C, notes).
+*.nds
+*.bin
+*.rom
+*.sav
+assets/
+extracted/
+build/
+ghidra_project/
+
+# --- Build artifacts ---
+*.o
+.ninja_log
+/build.ninja
+
+# --- Ghidra scaffolds (derived from the binaries; local only) ---
+ghidra_out/
+ghidra_targets.txt
+
+# --- Tooling / OS noise ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.idea/
+.vscode/
+.vs/
+Thumbs.db
+desktop.ini
+
+# third-party binaries (not our code) - dsd.exe, etc; re-fetch per notes/
+tools/bin/
+
+# proprietary, non-redistributable toolchain
+tools/mwccarm/
+license.dat
+
+# regenerable reference disassembly (derived from the binaries)
+asm/
+
+# agent scratch (matched C gets promoted to src/)
+match/auto/
+scratch/
+
+# local-only, never commit
+/scratchpad/
+
+# match ledger (local bookkeeping; the proof-of-record is the committed src/
+# files themselves - see tools/ledger.py and tools/sync_ledger.py)
+progress/
+
+# cloned third-party tools (decomp-permuter, m2c) - re-clone per notes/tooling.md;
+# decomp-permuter needs a few Windows-compat patches reapplied, documented there
+vendor/
+debug_source.c
+debug_compiled_object.o
