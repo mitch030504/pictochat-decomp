@@ -272,6 +272,55 @@ nearmiss.jsonl`. A score-0 result is always independently re-verified with
 `tools/match.py`'s own oracle before being banked - nothing is trusted on the
 permuter's say-so.
 
+### Large/hard-function strategy: lessons from sm64ds-decomp
+
+This project's tooling is ported from sm64ds-decomp
+([tangosdev/sm64ds-decomp](https://github.com/tangosdev/sm64ds-decomp),
+~95% matched as of this research) - worth checking their notes/ before
+re-deriving a large-function strategy from scratch. A few concrete,
+transferable findings pulled from their `research-matching-levers.md` and
+`crack-loop-runbook.md`:
+
+- **Permuter's limits are confirmed upstream, not just observed here.**
+  Their own research doc quotes the permuter author: it's "generally best
+  towards the end, when mostly regalloc changes remain," and "neither the
+  scorer nor the randomizer tends to play well with [reorderings or
+  functional changes]." They frame hard residuals as three "walls": (1)
+  base-address materialization (no known recipe, controlled experimentation
+  only), (2) register-pressure reproduction (mine other same-toolchain
+  decomp projects for already-solved idioms rather than reinventing), (3)
+  ordering/structural gaps (permuter cannot reliably fix these - accept
+  hand-fixing as the realistic path, custom passes are the only mechanical
+  lever). Don't burn permuter time on a candidate until it's past wall 3 -
+  confirmed the hard way on `FUN_022ce8b0` this session, where an unscoped
+  permuter run plateaued at a uniformly bad score for ~9400 iterations
+  against a candidate that turned out to have real structural (wall 3)
+  divergence, not a coloring problem.
+- **m2c drafts are disproportionately valuable specifically on large
+  functions.** Their crack-loop runbook reports large functions (0x400+
+  bytes) getting "free semantic C scaffolds from m2c tooling without token
+  cost," at roughly 64 tokens/byte versus 146+ tokens/byte for smaller
+  bands worked without one. Always pull an `tools/m2c_draft.py` (and/or
+  `tools/ghidra_draft.py`) draft before hand-translating a large function's
+  disassembly yourself.
+- **Abandonment heuristic**: they pivot away from a size band once its hit
+  rate drops toward ~40%, rather than re-grinding the same territory -
+  moving to fresh unworked functions (which resurface easier clusters),
+  free/template tiers, or a dedicated "refine" pass on the stuck backlog,
+  and coming back later rather than sinking indefinite iteration into one
+  function. Applies directly at the single-function scale too: if a
+  function has resisted a genuine multi-angle effort (m2c draft read,
+  structural hand-iteration, permuter after reaching wall-3-clean), park it
+  via `tools/nonmatching.py` with notes on exactly what was tried and
+  revisit later with fresh tooling or a dedicated session, rather than
+  continuing to spend of-the-moment iteration on it indefinitely.
+- They also standardized on `objdiff` (github.com/encounter/objdiff) as
+  their visual/machine diff interface (DS ARM support + CodeWarrior symbol
+  demangling) instead of a bespoke tool - worth evaluating as a replacement
+  or complement to `tools/fdiff.py` if hand-iteration on large functions
+  becomes a regular workload here, rather than continuing to grow a
+  bespoke diff tool function-by-function.
+
 ## tools/probe_versions.py
 
 Compiles a probe C file (`tools/probes/discriminate.c`, a spread of
@@ -318,6 +367,67 @@ different register" (regalloc/coloring - what the permuter fixes) versus a
 real structural difference (what you need to fix by hand). Use this instead
 of `match.py`'s plain pass/fail once you're iterating on something that's
 close but not there yet.
+
+Two modes added for large functions (past a couple hundred bytes, the plain
+per-word table is both unreadable and expensive to keep re-printing every
+iteration):
+
+- **`--compact`**: groups mismatching words into contiguous runs and prints
+  only a summary + a few boundary lines per run, instead of every word.
+  Use this once you're at the "mostly matches, a handful of small clusters
+  are off" stage - same-size candidate, register-coloring-scale diffs.
+- **`--align`**: for when candidate and target are *different sizes* (a
+  missing/extra instruction somewhere) - `--compact` and the plain mode are
+  both useless here, since a single insertion shifts every subsequent word
+  and makes the whole rest of the function look mismatched even when the
+  logic past that point is identical. `--align` instead runs a
+  `difflib.SequenceMatcher` over the *decoded instruction stream* keyed on
+  `shape()` (mnemonic + operands with register numbers and pc-relative
+  offsets squashed - the same normalization the plain table already uses
+  for its "same shape" note), so pure coloring differences collapse into
+  "equal" and only genuine inserted/deleted/reordered/different-shape
+  instructions show up as a block. This is also useful, without a size
+  difference, on a candidate that's badly diverged structurally (see the
+  `FUN_022ce8b0` case below) - it distinguishes "918 words differ because
+  of coloring noise cascading off one bad block" from "918 words differ
+  because the C is structurally wrong in a dozen places," which `--compact`
+  cannot tell apart on its own (it counts differing words, not differing
+  *shapes*).
+
+## tools/frame_shape.py
+
+Reads a function's prologue (`push {...}` / `stmdb sp!,{...}` then
+`sub sp,sp,#N`) straight off raw bytes - the ROM target, or a compiled
+candidate - and reports the register-save set and frame size, no full
+match/fdiff run needed:
+
+```
+python tools/frame_shape.py --module arm7 --addr 0x022ce8b0 --size 0x1194 \
+    --c candidate.c --func FUN_022ce8b0 --version dsi/1.3 --flags "..." --compare
+```
+
+Exists because on a large function, `-O4`'s register allocator's behavior
+(what stays in a register vs. gets spilled) is driven by how much frame +
+how many callee-saved registers the function ends up needing - a candidate
+that implies fewer live temporaries than the real function gets a smaller
+frame and a *different push-set*, and the compiler colors the entire body
+differently as a result. That shows up in `fdiff.py` as hundreds of
+scattered word diffs with no obvious single cause, and diagnosing "is this
+even the right frame shape" by eyeballing a huge diff dump is exactly the
+kind of grind this project's tooling exists to avoid. This tool answers
+that one question directly and cheaply (one compile) before you sink time
+into iteration.
+
+Caught in practice on `FUN_022ce8b0`: target pushes 10 registers (incl. an
+`r3` alignment-filler with no other use) + `sub sp,#0x28`; an early
+candidate pushed 9 + `sub sp,#0x2c` - same *total* stack depth (0x50 bytes
+either way), so the candidate wasn't "missing a local," it just had one
+fewer register available for the allocator to spread live values across,
+which was enough to make it globally cache constants (`mov r5,#0` reused
+~15 times) that the target re-materializes fresh at every use site instead.
+Knowing the total depth already matched (not just "some diff exists")
+correctly ruled out "need another local" as the fix and pointed at register
+*pressure*, not register *count*, being the lever to pull.
 
 ## The `pop {...,pc}` fold puzzle
 
@@ -397,6 +507,21 @@ function's own compiled output. Confirm the exact boundary empirically:
 try the size that ends right after the last real `bx lr`/`pop` first (a
 clean, zero-mismatch `tools/match.py` run confirms it), before assuming
 you need to include trailing bytes up to the next function.
+
+Same bug, much bigger instance: `FUN_022ce8b0` (arm7, a ~4.4KB dispatcher -
+the largest unmatched function as of this session) has a Ghidra-cached size
+of 4428 (0x114c) bytes, but its true size is 4500 (0x1194) - a 72-byte
+trailing pool Ghidra's analysis didn't reach. Confirmed cheaply without any
+disassembly: the *next* function in `extracted/pictochat_funcs.json`
+(`FUN_022cfa44`) starts at exactly `0x022ce8b0 + 4500`, with zero gap - so
+for any function you suspect is undercounted, checking the next function's
+address in the cache is a fast sanity check before reaching for
+`tools/disasm.py`. The corrected size was also applied directly to the
+local `extracted/pictochat_funcs.json` cache entry (gitignored, safe to
+patch) so every size-reading tool (`tools/funcs.py`, `tools/match.py`,
+`tools/permuter/import_func.py`, `tools/m2c_draft.py`'s `--name`/`--addr`
+resolve path, etc.) picks up the fix automatically instead of needing a
+`--size` override at every call site.
 
 ## A few more codegen idioms worth trying before you conclude "stuck"
 
