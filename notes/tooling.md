@@ -398,6 +398,33 @@ try the size that ends right after the last real `bx lr`/`pop` first (a
 clean, zero-mismatch `tools/match.py` run confirms it), before assuming
 you need to include trailing bytes up to the next function.
 
+## A few more codegen idioms worth trying before you conclude "stuck"
+
+Found while hand-matching `unk_autoload_0` 0x02328000-0x02330000:
+
+- **`x &= ~C` for a small constant `C`**: if the compiler is pool-loading a
+  full-width mask and ANDing instead of emitting a `BICS`, try keeping the
+  intermediate value as a plain `int` (not `unsigned short`/other narrow
+  type) and writing the result straight back through the pointer, rather
+  than caching it in a local first. This nudged mwccarm into the shorter
+  `BICS`-based form that matches this kind of clear-some-bits target.
+- **Register-pairing swaps in loop/pointer-walk shapes**: if two variables
+  come out in the opposite registers from target (a pure recolor, same
+  instruction shape otherwise), try declaring the plain scalar(s) (loop
+  counters, indices) *before* the pointer variable in source order. Fixed
+  one real case this way - but isn't universal, a sibling case with the
+  same symptom didn't respond to it, so treat it as one more thing to try,
+  not a rule.
+- **A pointer register reused via cheap arithmetic to materialize an
+  unrelated second constant**: e.g. having just computed `base+0x50` for
+  one purpose, the compiler notices `base+0x50` is *also* useful nearby
+  and re-derives it with a cheap `add r4,#0x50` instead of a fresh pool
+  load, even where the two uses aren't obviously related in the source.
+  This is a genuine optimizer behavior (CSE/rematerialization across
+  supposedly-unrelated expressions), not something source phrasing
+  reliably suppresses - if you hit it, it's likely a real, if frustrating,
+  compiler floor rather than a bug in your candidate.
+
 ## Inline asm is not a shortcut for ordinary application logic
 
 It's tempting, once a candidate is byte-for-byte identical to the target
