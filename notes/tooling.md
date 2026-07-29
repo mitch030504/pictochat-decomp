@@ -374,6 +374,15 @@ If it decodes as an alignment NOP followed by recognizable pool
 constant(s), use the corrected size (round up to include them) as `--size`
 instead of trusting the Ghidra cache verbatim.
 
+For a run of tiny sibling functions packed back-to-back (e.g. several
+`arg & G[N]`-style one-liners at consecutive addresses a few bytes apart),
+the trailing pool word Ghidra excluded from function A can be sitting
+*inside* what looks like function B's own address range - i.e. two
+adjacent undercounted functions can appear to overlap until both are
+corrected. Don't let that overlap read as a sign something's wrong; just
+correct each one's size independently from its own `bx lr`/`pop` forward,
+the same way as any other instance of this bug.
+
 The same undercounting hits switch/jump-table functions too, for a
 different reason: Ghidra's code-flow analysis can't always statically
 resolve an indirect `add pc,rX` dispatch, so it stops the function right
