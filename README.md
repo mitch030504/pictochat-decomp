@@ -11,26 +11,16 @@ turned up as a DSi system utility.
 ## Status
 
 <!-- progress:start -->
-**145 / 1551 functions matched (9.3%)**  `[#-------------------]`  (6 more parked NONMATCHING - logic-correct, not byte-exact)
-2338 / 166948 bytes (1.4%)
+**151 / 1551 functions matched (9.7%)**  `[#-------------------]`  (12 more parked NONMATCHING - logic-correct, not byte-exact)
+2494 / 166948 bytes (1.5%)
 <!-- progress:end -->
 
 (regenerate with `python tools/progress.py --write-readme`; needs a local
 `extracted/` - see Setup below. The total is Ghidra's current function count,
 not a precise figure - see [notes/pictochat-layout.md](notes/pictochat-layout.md).)
 
-2 functions were hand-written from scratch (`src/arm7/FUN_022c8268.c`, the
-first toolchain-verification target, and `src/arm9/FUN_02000e78.c`, the
-ARM946E MPU/cache/TCM system-setup routine run once from crt0); 26 were
-cross-matched for free from `sm64ds-decomp`'s already-verified SDK runtime
-code (`CP15`/`IRQ` hardware-abstraction-layer primitives, fast-copy helpers)
-- see [notes/cross-project-matching.md](notes/cross-project-matching.md); 57
-more came free from `tools/templates.py`'s self-verifying template tier
-(leaf shapes: empty stubs, field get/set, bitfields, global getters/
-setters, small struct copies and multi-field initializers - see
-[notes/tooling.md](notes/tooling.md)). Everything from here is the
-CONTRIBUTING.md loop, function by function - `tools/m2c_draft.py` and
-decomp-permuter (see notes/tooling.md) help with the harder ones.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the matching workflow and
+[notes/tooling.md](notes/tooling.md) for the tooling that helps with it.
 
 ## What "matching" means
 
