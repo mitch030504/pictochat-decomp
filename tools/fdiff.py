@@ -120,6 +120,7 @@ def decode_stream(data: bytes):
 
 
 def align_diff(target: bytes, cand: bytes, max_blocks: int = 20, context: int = 2):
+    """max_blocks=0 means unlimited (print every non-equal block)."""
     """Sequence-aligned diff for when target/candidate DIFFER IN LENGTH (a
     missing/extra instruction somewhere) - the normal fixed-position diff()
     is useless past the insertion/deletion point since every word after it
@@ -136,12 +137,13 @@ def align_diff(target: bytes, cand: bytes, max_blocks: int = 20, context: int = 
     c_shapes = [x[3] for x in c]
     sm = difflib.SequenceMatcher(a=t_shapes, b=c_shapes, autojunk=False)
     ops = [op for op in sm.get_opcodes() if op[0] != "equal"]
+    limit = len(ops) if max_blocks == 0 else max_blocks
     print(f"  target: {len(t)} decoded insn(s) (0x{len(target):x} bytes); "
           f"candidate: {len(c)} decoded insn(s) (0x{len(cand):x} bytes)")
     print(f"  {len(ops)} non-equal block(s) after shape-aligning "
           f"(register-coloring-only differences are collapsed)"
-          + (f", showing first {max_blocks}" if len(ops) > max_blocks else "") + ":")
-    for tag, i1, i2, j1, j2 in ops[:max_blocks]:
+          + (f", showing first {limit}" if len(ops) > limit else "") + ":")
+    for tag, i1, i2, j1, j2 in ops[:limit]:
         print(f"  -- {tag}: target[{i1}:{i2}] vs candidate[{j1}:{j2}]")
         lo_t, hi_t = max(0, i1 - context), min(len(t), i2 + context)
         lo_c, hi_c = max(0, j1 - context), min(len(c), j2 + context)
@@ -153,8 +155,8 @@ def align_diff(target: bytes, cand: bytes, max_blocks: int = 20, context: int = 
             cstr = f"+0x{c[ci][0]:03x} {c[ci][1].hex():<10}{c[ci][2]:26}" if ci < hi_c else ""
             marker = "*" if (i1 <= ti < i2 or j1 <= ci < j2) else " "
             print(f"    {marker} {tstr:42} | {cstr}")
-    if len(ops) > max_blocks:
-        print(f"  ... {len(ops) - max_blocks} more block(s) not shown")
+    if len(ops) > limit:
+        print(f"  ... {len(ops) - limit} more block(s) not shown")
     if not ops:
         print("  (no shape differences found - candidate may only need a byte-for-byte "
               "recheck, e.g. a literal-pool constant value)")
@@ -179,6 +181,11 @@ def main():
                      help="sequence-aligned diff for a candidate whose SIZE differs from "
                           "the target (finds the extra/missing instruction instead of "
                           "just reporting 'size differs')")
+    ap.add_argument("--align-max-blocks", type=int, default=20,
+                     help="cap on non-equal blocks printed by --align (0 = unlimited, "
+                          "for when you want the full picture instead of a truncated one)")
+    ap.add_argument("--align-context", type=int, default=2,
+                     help="lines of equal-context shown around each --align block")
     args = ap.parse_args()
 
     if args.target_hex:
@@ -204,7 +211,7 @@ def main():
         sys.exit(f"symbol '{args.func}' not found in compiled object")
 
     if args.align or len(target) != len(code):
-        align_diff(target, code)
+        align_diff(target, code, max_blocks=args.align_max_blocks, context=args.align_context)
         if len(target) != len(code):
             print(f"\nRESULT match=False size differs: target 0x{len(target):x} "
                   f"vs candidate 0x{len(code):x}")
