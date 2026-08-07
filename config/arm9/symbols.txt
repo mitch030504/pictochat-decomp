@@ -499,6 +499,7 @@ name=FUN_0232d32c module=unk_autoload_0 addr=0x0232d32c size=0x3a
 name=FUN_0232d36c module=unk_autoload_0 addr=0x0232d36c size=0x18
 name=FUN_0232d388 module=unk_autoload_0 addr=0x0232d388 size=0xa
 name=FUN_0232d398 module=unk_autoload_0 addr=0x0232d398 size=0x22
+name=FUN_0232d3a2 module=unk_autoload_0 addr=0x0232d3a2 size=0x28
 name=FUN_0232d3c4 module=unk_autoload_0 addr=0x0232d3c4 size=0x2
 name=FUN_0232d3c8 module=unk_autoload_0 addr=0x0232d3c8 size=0x2e
 name=FUN_0232d3fc module=unk_autoload_0 addr=0x0232d3fc size=0x78
