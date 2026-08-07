@@ -1,10 +1,16 @@
 // decomp: module=arm7 addr=0x022d6c8c name=FUN_022d6c8c
-// flags: -noThumb
+// flags: -noThumb -O4,s
 
-void FUN_022d6c8c(unsigned int *state, unsigned short value)
-{
-    state[0] = 0xffffffff;
-    state[1] = 0xffffffff;
-    ((unsigned short *)state)[4] = 0;
-    ((unsigned short *)state)[5] = value;
+struct S_022d6c8c {
+    int f0;
+    int f4;
+    unsigned short f8;
+    unsigned short fa;
+};
+
+void FUN_022d6c8c(struct S_022d6c8c *s, unsigned short val) {
+    s->f0 = -1;
+    s->f4 = -1;
+    s->f8 = 0;
+    s->fa = val;
 }
