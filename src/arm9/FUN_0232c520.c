@@ -1,3 +1,4 @@
+// decomp: module=unk_autoload_0 addr=0x0232c520 name=FUN_0232c520
 #pragma thumb on
 
 extern int FUN_0232c4dc(void);

@@ -1,3 +1,4 @@
+// decomp: module=unk_autoload_0 addr=0x0232a064 name=FUN_0232a064
 #pragma thumb on
 
 struct T0232a064 {

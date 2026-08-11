@@ -1,3 +1,4 @@
+// decomp: module=unk_autoload_0 addr=0x02324ab4 name=FUN_02324ab4
 #pragma thumb on
 // flags: -O4,s
 
