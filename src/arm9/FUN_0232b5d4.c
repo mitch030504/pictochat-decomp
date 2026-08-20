@@ -1,4 +1,5 @@
 // decomp: module=unk_autoload_0 addr=0x0232b5d4 name=FUN_0232b5d4
+#pragma thumb on
 void FUN_0232b5d4(char *p)
 {
     *(short *)(p + 0x8) = 0;
