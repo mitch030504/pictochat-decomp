@@ -6,36 +6,61 @@
 
 // EXACT-LAYOUT REFERENCE. Verified 2026-08-27 against the pinned toolchain.
 //
-// Measured by tools/match.py (the merge gate): size 0x1194 exact, 18 pool
-// words at the target's boundaries, 312 differing words. NOT a byte match.
+// tools/match.py (the merge gate) at 2.0/sp1: size 0x1194 exact, 18 pool words
+// at the target's boundaries, 312 differing words. NOT a byte match.
 //
-// Divergence structure (measured, corrects the earlier reports):
-//   - Candidate is in phase with the ROM over +0x000..+0x7e0 and
-//     +0xc7c..+0x1194, and lags by exactly one instruction across
-//     +0x8a0..+0xc34 (~230 instructions).
-//   - That lag is produced by a single surplus instruction at +0x860 -- the
-//     redundant zero-term `mla r2, r1, ip, r2` in the 0x82ea 64-bit multiply.
-//     The ROM emits umull/asr/mla (one MLA); mwccarm 2.0/sp1 materialises an
-//     explicit zero high word and pays a second MLA.
-//   - It is cancelled by a one-instruction deficit in the case-0x184 zero
-//     test around +0xc44, which is why total size stays exact at 0x1194.
-//   - The bulk of the 312 differing words is therefore phase-shift plus
-//     register colouring, not independent structural error.
-//
-// The four relocation warnings tools/match.py prints (+0x940, +0xa20, +0xab8,
-// +0xc0c) are artifacts of that same phase shift, NOT wrong callees. At
-// +0x93c the ROM calls FUN_022d5540 and at +0x940 it calls func_037d14bc;
-// the candidate emits the same two calls one slot late. Earlier reports
-// listed these as wrong relocation targets; that reading was incorrect.
-//
-// Reconfirmed walls (retested 2026-08-27 on this source, not inherited):
-//   - Seven further multiply spellings (signed/unsigned operand order,
-//     32-bit multiplier, literal and LL-suffixed constants, explicit
-//     widening) all compile to byte-identical output. The MLA is a backend
-//     wall, not a phrasing problem.
+// ===================================================================
+// A BYTE MATCH IS IMPOSSIBLE AT 2.0/sp1.  Read this before retrying.
+// ===================================================================
+// At +0x860 the ROM emits TWO instructions for the 0x82ea 64-bit multiply:
+//     umull r1, r0, r3, r2 / asr r3, r3, #0x1f / mla r0, r3, r2, r0
+// mwccarm 2.0/sp1 emits THREE, materialising an explicit zero high word and
+// paying a redundant zero-term `mla r2, r1, ip, r2`.  Those words differ
+// structurally, so no register colouring or declaration ordering can close
+// the gap at this build.  Independently confirmed:
+//   - an 803-ordering tools/declorder_search.py pass: ZERO improvement;
+//   - ~10 further multiply spellings (operand order/signedness, 32-bit
+//     multiplier, literal and LL constants, explicit lo/hi widening) all
+//     compile to byte-identical output;
 //   - #pragma opt_propagation off removes the MLA but grows the function to
-//     0x11a0, so it remains globally invalid here. Do not move the 2.0/sp1
-//     pin: later builds drop the MLA but regress other matched arm7 code.
+//     0x11a0, and is structurally worse (21 blocks vs 10).
+//
+// ONLY 2.0/sp2p2 / sp2p3 / sp2p4 CAN MATCH.  There the redundant MLA is gone
+// - which is exactly why the function comes out 0x1190, ONE INSTRUCTION SHORT
+// of 0x1194.  The whole remaining problem is a net +1 at those builds.
+// This is legitimate: tools/pr_linkcheck.py sweeps PINNED (match.py:87-91),
+// and the landed, matched FUN_022d8b1c matches 8 of 9 pinned builds and NOT
+// canonical 2.0/sp1.  This function discriminates within the pinned nine.
+//
+// The four relocation warnings match.py prints (+0x940, +0xa20, +0xab8,
+// +0xc0c) are artifacts of a one-instruction phase shift over +0x8a0..+0xc34,
+// NOT wrong callees.  At +0x93c the ROM calls FUN_022d5540 and at +0x940
+// func_037d14bc; this source emits the same two calls one slot late.  Earlier
+// reports recorded these as wrong relocation targets - that reading was wrong.
+//
+// WHERE THE RESIDUAL LIVES.  At sp2p2 fdiff shows 10 non-equal blocks, and
+// ~85% of the differing words fall in one contiguous region, +0xb50..+0xd90
+// (the case-0x184 allocator cluster).  The ROM there spills the `v|1` halves
+// to sp+8 / sp+0xc and RELOADS them at the indexed store (+0xbe0, +0xbec),
+// and holds a 64-bit zero in registers for the compare (+0xc44 `mov r3,#0`),
+// while this source keeps all of it in registers.  Every source-level attempt
+// to force that topology regressed.
+//
+// SEARCH ALREADY SPENT (do not repeat blindly).  Beyond the handoff's ~21k
+// permuter trials - which all ran at sp1, i.e. against a space with no
+// solution - this function has since had: 56 tools/csweep.py combinations
+// over pragmas x opt level x zero-compare form (no size-exact result at
+// sp2p2; opt_strength_reduction and optimize_for_size are INERT here), and a
+// multi-hour decomp-permuter run at sp2p2 on 23 cores using focused
+// (case-0x184 PERM_RANDOMIZE), unfocused and diversity-restart modes.  That
+// search reduced divergence 312 -> 108 words at size-exact 0x1194, then sat
+// at 108 for 18 consecutive cycles in all three modes.
+//
+// The 108-word variant is deliberately NOT landed here: it is permuter-
+// mangled (all named DAT_* constants stripped, five machine-named inline
+// helpers, ~1300 unreviewed lines).  This file keeps the hand-written,
+// logic-verified source instead.  The next real lever is the case-0x184
+// spill/reload topology, not another broad search.
 
 
 
