@@ -46,21 +46,53 @@
 // while this source keeps all of it in registers.  Every source-level attempt
 // to force that topology regressed.
 //
-// SEARCH ALREADY SPENT (do not repeat blindly).  Beyond the handoff's ~21k
-// permuter trials - which all ran at sp1, i.e. against a space with no
-// solution - this function has since had: 56 tools/csweep.py combinations
-// over pragmas x opt level x zero-compare form (no size-exact result at
-// sp2p2; opt_strength_reduction and optimize_for_size are INERT here), and a
-// multi-hour decomp-permuter run at sp2p2 on 23 cores using focused
-// (case-0x184 PERM_RANDOMIZE), unfocused and diversity-restart modes.  That
-// search reduced divergence 312 -> 108 words at size-exact 0x1194, then sat
-// at 108 for 18 consecutive cycles in all three modes.
+// THE MISSING INSTRUCTION IS `orr r1, r1, #0` (found 2026-08-29).
+// At +0xb74 the ROM emits a SEMANTIC NO-OP on the high half:
+//     +0xb5c  orr r0, r0, #1     ; lo | 1
+//     +0xb74  orr r1, r1, #0     ; hi | 0  <- identity, but emitted
+//     +0xb80  str r1, [sp, #0xc]
+// That instruction only appears when the OR is done at full 64-bit width: the
+// compiler splits `uVar24 | 1` into `orr lo,lo,#1` AND `orr hi,hi,#0`.  This
+// file narrows first (`uVar15 = (uint)uVar24 | 1`), so only one orr is emitted
+// and the function comes out one instruction short at sp2p2.
 //
-// The 108-word variant is deliberately NOT landed here: it is permuter-
-// mangled (all named DAT_* constants stripped, five machine-named inline
-// helpers, ~1300 unreviewed lines).  This file keeps the hand-written,
-// logic-verified source instead.  The next real lever is the case-0x184
-// spill/reload topology, not another broad search.
+// Widening it (`uVar24 = func_037caa3c() | 1; uVar15 = (uint)uVar24;`) DOES
+// supply the instruction, and on a permuter-derived source it produced the
+// first size-exact-AND-correct candidate: 0x1194 exact, 72 differing words,
+// 0 bad relocations, verified byte-for-byte at +0xb74 (001081e3).
+//
+// BUT DO NOT APPLY IT TO THIS FILE.  Measured here it stays 0x1190 and
+// explodes the block count 10 -> 34 (relocations improve 5 -> 3).  This
+// source's one-instruction deficit has a DIFFERENT cause than the permuter
+// lineage's, and the two must not be conflated.
+//
+// WARNING - THE BYTE METRIC CANNOT SEE SEMANTICS.  A long permuter search
+// reported 108 -> 73 -> 72 -> 71 -> 69 words.  Those numbers are CONTAMINATED
+// and must not be trusted: the search was buying size-exactness by corrupting
+// the 64-bit high-word extraction, three different ways -
+//     (uVar24 & 0xFFFFFFFFu) >> 0x20     // mask low 32, shift 32 => always 0
+//     ... & 0                            // AND with zero
+//     (uVar24 >> 0x20) & 0xFF            // truncate high word to 8 bits
+// Each buys exactly the one missing instruction.  Correcting any of them drops
+// the candidate straight back to 0x1190.  A spelling blacklist was written and
+// beaten within two cycles; the guard that works rejects the SHAPE (any mask
+// applied after `>> 0x20`).  Anyone resuming this must re-verify a candidate's
+// semantics against the ROM, not just its word count.
+//
+// SEARCH ALREADY SPENT (do not repeat blindly).  The handoff's ~21k permuter
+// trials all ran at sp1, i.e. against a space with no solution.  Since then:
+// ~40 hand hypotheses; 56 tools/csweep.py combinations over pragmas x opt level
+// x zero-compare form (opt_strength_reduction and optimize_for_size are INERT
+// here); 1200 tools/declorder_search.py orderings AT sp2p2 on the near-miss
+// candidate, none accepted and the winning order identical to the input; and a
+// multi-day decomp-permuter run on 23 cores using focused (case-0x184 and
+// case-0x182 PERM_RANDOMIZE), unfocused, and diversity-restart modes.
+//
+// The honest residual is the case-0x184 spill/reload topology: the ROM reloads
+// the `v|1` halves from sp+8 / sp+0xc at the indexed store (+0xbe0, +0xbec) and
+// holds a 64-bit zero in registers for the compare (+0xc44 `mov r3,#0`), while
+// this source keeps all of it in registers.  Nothing in the search toolkit has
+// ever reached that; it needs reasoning about the allocator, not more search.
 
 
 
