@@ -1,7 +1,9 @@
 //cpp
 // decomp: module=main addr=0x02000dfc name=FUN_02000dfc
 // flags: -noThumb
-extern "C" void FUN_02000e78(void);
+// The segment loader branches to the bx-lr return stub at 0x02000e74.
+// 0x02000e78 starts the separate MPU initialization routine.
+extern "C" void FUN_02000e74(void);
 extern "C" asm void FUN_02000dfc(void) {
     ldr r0, =0x02000f64
     ldr r1, [r0, #0]
@@ -36,5 +38,5 @@ extern "C" asm void FUN_02000dfc(void) {
     blt @cache_loop
     b @loop_seg
 @end:
-    b FUN_02000e78
+    b FUN_02000e74
 }
