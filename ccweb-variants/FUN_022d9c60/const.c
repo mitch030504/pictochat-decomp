@@ -1,5 +1,5 @@
 // decomp: module=arm7 addr=0x022d9c60 name=FUN_022d9c60
-// flags: -noThumb
+// flags: -O4,s -noThumb
 // size: 0xe8 - the nominal 0xe4 excludes the trailing pool word.
 //
 // Records a new status for peer `peer` under the interrupt lock. A status

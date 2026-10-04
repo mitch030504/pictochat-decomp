@@ -1,5 +1,5 @@
 // decomp: module=arm7 addr=0x022d9c60 name=FUN_022d9c60
-// flags: -noThumb
+// flags: -O4,s -noThumb
 // size: 0xe8 - the nominal 0xe4 excludes the trailing pool word.
 //
 // Records a new status for peer `peer` under the interrupt lock. A status
@@ -27,17 +27,20 @@ extern char *G_0380fff4;
 
 void FUN_022d9c60(int peer, unsigned int status)
 {
+    char **pp;
     int token = FUN_037c9084(0x01000000);
 
+    pp = &G_0380fff4;
+
     if (status < 0x40) {
-        *(u16 *)(ST + 0x530) |= 1 << peer;
-        *(u16 *)(ST + 0x532) |= 1 << peer;
-        if (*(u16 *)(ST + 0x350) == 1 && FUN_022da0e8(peer) != 0) {
+        *(u16 *)(*pp + 0x530) |= 1 << peer;
+        *(u16 *)(*pp + 0x532) |= 1 << peer;
+        if (*(u16 *)(*pp + 0x350) == 1 && FUN_022da0e8(peer) != 0) {
             FUN_022d9f7c(peer);
         }
     } else {
-        *(u16 *)(ST + 0x532) &= ~(1 << peer);
-        if ((*(u16 *)(ST + 0x52e) >> peer) & 1) {
+        *(u16 *)(*pp + 0x532) &= ~(1 << peer);
+        if ((*(u16 *)(*pp + 0x52e) >> peer) & 1) {
             FUN_022d9dc4(peer);
         }
     }

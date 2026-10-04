@@ -23,6 +23,7 @@ int FUN_022d83e0(unsigned int n, const unsigned char *data)
     const unsigned char *ssid;
     unsigned char m;
     unsigned char b;
+    unsigned char c;
 
     if (n > 0x20) {
         return 0;
@@ -42,14 +43,13 @@ int FUN_022d83e0(unsigned int n, const unsigned char *data)
 
     ssid = p + 0x20;
     mask = p + 0x40;
-    i = 0;
-    while (i < n) {
+    for (i = 0; i < n; i++) {
         m = FUN_022d8d6c(mask++);
         b = FUN_022d8d6c(data++);
-        if ((b | m) != (m | FUN_022d8d6c(ssid++))) {
+        c = FUN_022d8d6c(ssid++);
+        if ((b | m) != (c | m)) {
             return 0;
         }
-        i++;
     }
     return 1;
 }
