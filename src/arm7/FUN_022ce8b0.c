@@ -120,7 +120,7 @@ void FUN_022ce8b0(void)
   uint uVar8;
   byte *qbase;
   uint min184;
-  
+
   qbase = G_023180dc;
   do {
     while( true ) {
