@@ -28,8 +28,8 @@ extern void FUN_022c5d90(void *heap, void *heapEnd, Blk *blk);
 
 int FUN_022c11b8(int owner, Blk *blk)
 {
-    Ctx *c = *(Ctx **)0x0380fff4;
     int r;
+    Ctx *c = *(Ctx **)0x0380fff4;
 
     if (blk->tag != 0xbf1d) {
         return 1;

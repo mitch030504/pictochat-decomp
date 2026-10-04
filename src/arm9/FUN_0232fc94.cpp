@@ -30,7 +30,6 @@ extern void FUN_023381ac(Arc *arc, unsigned int idx, void *data);
 int FUN_0232fc94(Arc *arc, unsigned int idx, void *src, void *heap)
 {
     unsigned int last;
-    int *e;
     int off;
     int len;
     void *buf;
@@ -39,9 +38,8 @@ int FUN_0232fc94(Arc *arc, unsigned int idx, void *src, void *heap)
         return 1;
     }
     last = FUN_023381a8(arc) - 1;
-    e = &arc->offs[arc->count + idx];
-    off = e[0];
-    len = ((idx < last) ? e[1] : arc->end) - off;
+    off = arc->offs[arc->count + idx];
+    len = ((idx < last) ? arc->offs[arc->count + idx + 1] : arc->end) - off;
     if (heap == 0) {
         return 0;
     }

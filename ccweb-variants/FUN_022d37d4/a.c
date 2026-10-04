@@ -54,7 +54,7 @@ void FUN_022d37d4(Req *req)
     }
 
     if (interval != 0xffff) {
-        b->interval = (interval == 0) ? 1 : (u64)(interval * 100) * 33514 / 64;
+        b->interval = (interval == 0) ? 1 : 33514 * (u64)(interval * 100) / 64;
     } else {
         b->interval = 0;
     }

@@ -28,11 +28,13 @@ extern void FUN_022c5d90(void *heap, void *heapEnd, Blk *blk);
 
 int FUN_022c11b8(int owner, Blk *blk)
 {
-    Ctx *c = *(Ctx **)0x0380fff4;
+    Ctx *c;
     int r;
 
+    c = *(Ctx **)0x0380fff4;
     if (blk->tag != 0xbf1d) {
-        return 1;
+        r = 1;
+        return r;
     }
     r = FUN_022c105c(owner, blk);
     if (r == 0) {

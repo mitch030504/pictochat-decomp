@@ -37,6 +37,6 @@ int FUN_022d7444(unsigned int mode, unsigned int sel)
         break;
     }
     FLAGS.b4 = (u16)mode;
-    *(volatile u16 *)0x04808290 = FLAGS.b3 ^ FLAGS.b5;
+    *(volatile u16 *)0x04808290 = FLAGS.b5 ^ FLAGS.b3;
     return 0;
 }
