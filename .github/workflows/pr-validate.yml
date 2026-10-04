@@ -108,6 +108,11 @@ jobs:
             body += `\n\n<sub>Each changed \`src/arm9|arm7/*.c|*.cpp\` is compiled and byte-compared to the extracted binary on a private build box. Passing requires every changed file to reproduce it byte-for-byte. Note: this repo has no relocation-destination ground truth yet (config/**/relocs.txt), so a WRONG-DEST relocation to the wrong callee/global would NOT be caught here — only instruction words and reloc positions are verified.</sub>`;
             const { owner, repo } = context.repo;
             const issue_number = context.payload.pull_request.number;
+            const { data: current } = await github.rest.pulls.get({ owner, repo, pull_number: issue_number });
+            if (current.head.sha !== context.payload.pull_request.head.sha) {
+              core.info('Skipping validation comment for a superseded PR head.');
+              return;
+            }
             const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number });
             const existing = comments.find(c => c.body && c.body.includes(marker));
             if (existing) {
