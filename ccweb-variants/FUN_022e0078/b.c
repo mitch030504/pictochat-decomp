@@ -15,15 +15,14 @@ int FUN_022e0078(unsigned char *dst)
 {
     int n = 0;
     unsigned char *p = *(unsigned char **)0x0380fff4 + 0x344;
-    int i;
+    unsigned int i;
     u16 len = *(u16 *)(p + 0x1e);
 
     FUN_022d8d40(dst + n, 0);
     FUN_022d8d40(dst + 1, len);
     n += 2;
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < len; i++, n++) {
         FUN_022d8d40(dst + n, FUN_022d8d6c(p + 0x20 + i));
-        n++;
     }
     return n;
 }

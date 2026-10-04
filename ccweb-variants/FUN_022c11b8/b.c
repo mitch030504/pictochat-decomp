@@ -1,5 +1,5 @@
 // decomp: module=arm7 addr=0x022c11b8 name=FUN_022c11b8
-// flags: -O4,s -noThumb
+// flags: -noThumb
 // size: 0x80 - the nominal 0x78 excludes the two trailing pool words
 // (0x0380fff4 and the 0xbf1d tag).
 //
@@ -28,10 +28,9 @@ extern void FUN_022c5d90(void *heap, void *heapEnd, Blk *blk);
 
 int FUN_022c11b8(int owner, Blk *blk)
 {
-    Ctx *c;
+    Ctx *c = *(Ctx **)0x0380fff4;
     int r;
 
-    c = *(Ctx **)0x0380fff4;
     if (blk->tag != 0xbf1d) {
         return 1;
     }

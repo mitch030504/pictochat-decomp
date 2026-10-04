@@ -1,5 +1,5 @@
 // decomp: module=arm7 addr=0x022d37d4 name=FUN_022d37d4
-// flags: -O4,s -noThumb
+// flags: -noThumb
 // size: 0x124 - the nominal 0x118 excludes the three trailing pool words.
 //
 // Handles request 0x1d. Builds the configuration frame from the request's
@@ -54,7 +54,7 @@ void FUN_022d37d4(Req *req)
     }
 
     if (interval != 0xffff) {
-        b->interval = (interval == 0) ? 1 : (u64)((long long)(interval * 100) * 33514) / 64;
+        b->interval = (interval == 0) ? 1 : 33514 * (u64)(interval * 100) / 64;
     } else {
         b->interval = 0;
     }

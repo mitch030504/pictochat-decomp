@@ -30,10 +30,10 @@ extern void FUN_022dded8(Queue *q, int cmd);
 
 void FUN_022ded7c(int id)
 {
-    int flushed = 0;
-    u16 *req;
-    int next;
     int cmd;
+    int next;
+    u16 *req;
+    int flushed = 0;
     unsigned int i;
 
     if (FUN_022da108(id) == 0) {

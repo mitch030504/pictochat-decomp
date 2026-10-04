@@ -1,5 +1,5 @@
 // decomp: module=arm7 addr=0x022c3bd4 name=FUN_022c3bd4
-// flags: -O4,s -noThumb
+// flags: -noThumb
 // size: 0x7c - the nominal 0x74 excludes the two trailing pool words.
 //
 // Busy-sleeps for `usec` microseconds: arms the alarm at +0x634 of the ARM7
@@ -17,7 +17,7 @@ void FUN_022c3bd4(unsigned int usec, void (*handler)(void *))
     volatile int busy = 1;
     unsigned int mul = 33514;
 
-    FUN_022c651c(*(char **)0x0380fff4 + 0x634, mul * (u64)usec / 64 / 1000,
+    FUN_022c651c(*(char **)0x0380fff4 + 0x634, (u64)usec * mul / 64 / 1000,
                  handler, (void *)&busy);
     while (busy != 0) {
     }

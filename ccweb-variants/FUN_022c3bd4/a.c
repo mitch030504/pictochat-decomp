@@ -8,13 +8,16 @@
 
 typedef unsigned long long u64;
 
+#pragma opt_propagation off
+
 extern void FUN_022c651c(void *alarm, u64 tick, void (*handler)(void *), void *arg);
 
 void FUN_022c3bd4(unsigned int usec, void (*handler)(void *))
 {
     volatile int busy = 1;
+    unsigned int mul = 33514;
 
-    FUN_022c651c(*(char **)0x0380fff4 + 0x634, 33514 * (u64)usec / 64 / 1000,
+    FUN_022c651c(*(char **)0x0380fff4 + 0x634, (u64)usec * mul / 64 / 1000LL,
                  handler, (void *)&busy);
     while (busy != 0) {
     }

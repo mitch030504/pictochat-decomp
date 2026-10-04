@@ -1,5 +1,5 @@
 // decomp: module=arm7 addr=0x022c4948 name=FUN_022c4948
-// flags: -O4,s -noThumb
+// flags: -noThumb
 // size: 0x74 - the nominal 0x68 excludes the three trailing pool words.
 //
 // OS_InitLock (ARM7 side): one-time init of the ARM9/ARM7 lock handshake in
@@ -8,7 +8,7 @@
 // initialises the ARM7 lock-ID bitmap at 0x02ffffb8 and marks the lock with
 // the ARM7 ID 0xbf.
 
-typedef struct OSLockWord {
+typedef volatile struct OSLockWord {
     unsigned int lockFlag;
     unsigned short ownerID;
     unsigned short extension;
@@ -30,7 +30,7 @@ void FUN_022c4948(void)
     while (lockp->ownerID != 0x7f) {
         FUN_022c49bc(0x400);
     }
-    ((unsigned int *)0x02ffffb8)[0] = 0xffffffff;
-    ((unsigned int *)0x02ffffb8)[1] = 0xffff0000;
+    ((volatile unsigned int *)0x02ffffb8)[0] = 0xffffffff;
+    ((volatile unsigned int *)0x02ffffb8)[1] = 0xffff0000;
     lockp->extension = 0xbf;
 }

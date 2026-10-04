@@ -1,4 +1,3 @@
-//cpp
 // decomp: module=unk_autoload_0 addr=0x0232fc94 name=FUN_0232fc94
 // size: 0x90 - the nominal 0x8c excludes the trailing pool word.
 //
@@ -8,8 +7,6 @@
 // at the archive end (+0x8). A buffer of len+0x20 is allocated through
 // FUN_0232f84c, the member is read into it from `src`, flushed, and published
 // in the slot. Returns 1 when the member is resident, 0 on any failure.
-
-extern "C" {
 
 typedef struct Arc {
     char pad00[8];
@@ -55,6 +52,4 @@ int FUN_0232fc94(Arc *arc, unsigned int idx, void *src, void *heap)
     FUN_023314e8(buf, len);
     FUN_023381ac(arc, idx, buf);
     return 1;
-}
-
 }

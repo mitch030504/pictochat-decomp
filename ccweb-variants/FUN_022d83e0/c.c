@@ -42,12 +42,14 @@ int FUN_022d83e0(unsigned int n, const unsigned char *data)
 
     ssid = p + 0x20;
     mask = p + 0x40;
-    for (i = 0; i < n; i++) {
+    i = 0;
+    while (i < n) {
         m = FUN_022d8d6c(mask++);
         b = FUN_022d8d6c(data++);
-        if ((b | m) != (FUN_022d8d6c(ssid++) | m)) {
+        if ((b | m) != (m | FUN_022d8d6c(ssid++))) {
             return 0;
         }
+        i++;
     }
     return 1;
 }

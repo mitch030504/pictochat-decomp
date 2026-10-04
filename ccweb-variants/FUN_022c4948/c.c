@@ -1,5 +1,5 @@
 // decomp: module=arm7 addr=0x022c4948 name=FUN_022c4948
-// flags: -O4,s -noThumb
+// flags: -noThumb
 // size: 0x74 - the nominal 0x68 excludes the three trailing pool words.
 //
 // One-time init of the ARM9/ARM7 handshake in shared main RAM: marks itself
@@ -14,7 +14,9 @@ void FUN_022c4948(void)
 {
     volatile unsigned short *sync = (volatile unsigned short *)0x02fffff0;
 
-    if (G_03804f64 == 0) {
+    if (G_03804f64 != 0) {
+        return;
+    }
     G_03804f64 = 1;
     sync[3] = 0;
     while (sync[2] != 0x7f) {
@@ -23,5 +25,4 @@ void FUN_022c4948(void)
     *(volatile unsigned int *)0x02ffffb8 = 0xffffffff;
     *(volatile unsigned int *)0x02ffffbc = 0xffff0000;
     sync[3] = 0xbf;
-    }
 }

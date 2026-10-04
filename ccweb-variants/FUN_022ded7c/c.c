@@ -1,5 +1,5 @@
 // decomp: module=arm7 addr=0x022ded7c name=FUN_022ded7c
-// flags: -O4,s -noThumb
+// flags: -noThumb
 // size: 0xf8 - the nominal 0xf4 excludes the trailing pool word.
 //
 // Flushes every queued command addressed to `id` from the three send queues
@@ -30,11 +30,11 @@ extern void FUN_022dded8(Queue *q, int cmd);
 
 void FUN_022ded7c(int id)
 {
+    int cmd;
     u16 *req;
     int next;
-    int cmd;
-    unsigned int i;
     int flushed = 0;
+    unsigned int i;
 
     if (FUN_022da108(id) == 0) {
         return;

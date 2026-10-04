@@ -1,5 +1,5 @@
 // decomp: module=arm7 addr=0x022e0078 name=FUN_022e0078
-// flags: -O4,s -noThumb
+// flags: -noThumb
 // size: 0x74 - the nominal 0x70 excludes the trailing pool word.
 //
 // Serialises the SSID element (id 0) at `dst` from the channel block at
@@ -16,7 +16,7 @@ int FUN_022e0078(unsigned char *dst)
     int n = 0;
     unsigned char *p = *(unsigned char **)0x0380fff4 + 0x344;
     unsigned int i;
-    unsigned int len = *(u16 *)(p + 0x1e);
+    u16 len = *(u16 *)(p + 0x1e);
 
     FUN_022d8d40(dst + n, 0);
     FUN_022d8d40(dst + 1, len);

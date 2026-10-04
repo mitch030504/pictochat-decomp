@@ -16,9 +16,8 @@ void FUN_022c3bd4(unsigned int usec, void (*handler)(void *))
 {
     volatile int busy = 1;
     unsigned int mul = 33514;
-    unsigned int div = 1000;
 
-    FUN_022c651c(*(char **)0x0380fff4 + 0x634, (u64)usec * mul / 64 / div,
+    FUN_022c651c(*(char **)0x0380fff4 + 0x634, (long long)((u64)usec * mul / 64) / 1000,
                  handler, (void *)&busy);
     while (busy != 0) {
     }

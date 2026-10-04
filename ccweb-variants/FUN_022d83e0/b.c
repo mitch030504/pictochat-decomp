@@ -1,5 +1,5 @@
 // decomp: module=arm7 addr=0x022d83e0 name=FUN_022d83e0
-// flags: -O4,s -noThumb
+// flags: -noThumb
 // size: 0xd0 - the nominal 0xcc excludes the trailing pool word.
 //
 // Compares `n` bytes of a candidate SSID against the one configured in the
@@ -43,9 +43,9 @@ int FUN_022d83e0(unsigned int n, const unsigned char *data)
     ssid = p + 0x20;
     mask = p + 0x40;
     for (i = 0; i < n; i++) {
-        m = FUN_022d8d6c(p + 0x40 + i);
-        b = FUN_022d8d6c(data + i);
-        if ((b | m) != (FUN_022d8d6c(p + 0x20 + i) | m)) {
+        m = FUN_022d8d6c(mask++);
+        b = FUN_022d8d6c(data++);
+        if ((b | m) != (m | FUN_022d8d6c(ssid++))) {
             return 0;
         }
     }
