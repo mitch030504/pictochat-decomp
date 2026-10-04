@@ -13,7 +13,7 @@ extern int FUN_022d7c88(unsigned short enable);
 
 #define ST (*(char **)0x0380fff4)
 
-int FUN_022d6f6c(unsigned int mode)
+int FUN_022d6f6c(u16 mode)
 {
     if (mode > 3) {
         return 5;

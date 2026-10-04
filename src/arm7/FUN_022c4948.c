@@ -12,15 +12,17 @@ extern void FUN_022c49bc(int delay);
 
 void FUN_022c4948(void)
 {
+    volatile unsigned short *sync = (volatile unsigned short *)0x02fffff0;
+
     if (G_03804f64 != 0) {
         return;
     }
     G_03804f64 = 1;
-    *(volatile unsigned short *)0x02fffff6 = 0;
-    while (*(volatile unsigned short *)0x02fffff4 != 0x7f) {
+    sync[3] = 0;
+    while (sync[2] != 0x7f) {
         FUN_022c49bc(0x400);
     }
     *(volatile unsigned int *)0x02ffffb8 = 0xffffffff;
     *(volatile unsigned int *)0x02ffffbc = 0xffff0000;
-    *(volatile unsigned short *)0x02fffff6 = 0xbf;
+    sync[3] = 0xbf;
 }

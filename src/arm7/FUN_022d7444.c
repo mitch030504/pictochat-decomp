@@ -20,14 +20,14 @@ typedef struct Flags33a {
 
 #define FLAGS (*(Flags33a *)(*(char **)0x0380fff4 + 0x33a))
 
-int FUN_022d7444(u16 mode, u16 sel)
+int FUN_022d7444(unsigned int mode, unsigned int sel)
 {
     if (mode > 1 || sel > 1) {
         return 5;
     }
     switch (mode) {
     case 0:
-        FLAGS.b5 = sel;
+        FLAGS.b5 = (u16)sel;
         break;
     case 1:
         if (*(u16 *)(*(char **)0x0380fff4 + 0x32e) != 1) {
@@ -36,7 +36,7 @@ int FUN_022d7444(u16 mode, u16 sel)
         FLAGS.b5 = 0;
         break;
     }
-    FLAGS.b4 = mode;
+    FLAGS.b4 = (u16)mode;
     *(volatile u16 *)0x04808290 = FLAGS.b3 ^ FLAGS.b5;
     return 0;
 }

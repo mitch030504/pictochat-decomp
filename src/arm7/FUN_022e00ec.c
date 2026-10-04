@@ -15,8 +15,8 @@ extern void FUN_022d8d40(unsigned char *p, unsigned char v);
 int FUN_022e00ec(unsigned char *dst)
 {
     unsigned char *p = *(unsigned char **)0x0380fff4 + 0x344;
-    unsigned int i;
     int n = 0;
+    unsigned int i;
 
     FUN_022d8d40(dst + n, 1);
     n += 2;

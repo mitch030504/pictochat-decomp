@@ -26,6 +26,8 @@ typedef struct Blk37d4 {
     u64 interval;       /* +0x7b8 */
 } Blk37d4;
 
+#pragma opt_propagation off
+
 extern Blk37d4 *G_023190dc[];
 extern u16 *FUN_037d14bc(void);
 extern void FUN_037d1464(u16 *ind);
@@ -41,6 +43,7 @@ void FUN_022d37d4(Req *req)
     u16 *ind;
     u64 now;
     int i;
+    unsigned int mul = 33514;
 
     status = FUN_022d061c(buf, req->a, req->b, req->c)[2];
     if (status != 0) {
@@ -54,7 +57,7 @@ void FUN_022d37d4(Req *req)
     }
 
     if (interval != 0xffff) {
-        b->interval = (interval == 0) ? 1 : (u64)(interval * 100) * 33514 / 64;
+        b->interval = (interval == 0) ? 1 : (u64)(interval * 100) * mul / 64;
     } else {
         b->interval = 0;
     }

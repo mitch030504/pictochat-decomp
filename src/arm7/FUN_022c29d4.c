@@ -41,11 +41,11 @@ void FUN_022c29d4(int mode)
 {
     vu16 *io = (vu16 *)0x04808010;
     Ctx *c = (Ctx *)(ST + 0x42c);
-    Frame *f;
-    u16 busy;
-    u16 rf;
-    u16 m;
     int n;
+    u16 m;
+    u16 rf;
+    u16 busy;
+    Frame *f;
 
     io[0] = 0x1000;
     if (c->f3c == 0) {
@@ -53,7 +53,7 @@ void FUN_022c29d4(int mode)
     }
     if ((*(u16 *)(ST + 0x690) & 0x10) && mode != 0) {
         busy = io[0x53];
-        rf = io[0x102];
+        rf = *(vu16 *)0x04808214;
         if ((rf == 3 || rf == 5) && busy == 0) {
             f = c->f44;
             n = 0;

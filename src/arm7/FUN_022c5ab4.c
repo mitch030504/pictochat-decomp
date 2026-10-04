@@ -11,7 +11,6 @@
 // The two stack-size words in the pool are separate symbol relocations (both
 // read 0x400); that is why the comparisons against them survive -O4.
 
-extern char G_0380ff80[];
 extern char G_03807258[];
 extern char SDK_IRQ_STACKSIZE[];
 extern char SDK_SYS_STACKSIZE[];
@@ -24,7 +23,7 @@ void *FUN_022c5ab4(int id)
     case 7:
         return (void *)0x03800000;
     case 8: {
-        char *irqLo = G_0380ff80 - (int)SDK_IRQ_STACKSIZE;
+        char *irqLo = (char *)0x0380ff80 - (int)SDK_IRQ_STACKSIZE;
         char *p = (char *)0x03800000;
 
         if (G_03807258 > (char *)0x03800000)

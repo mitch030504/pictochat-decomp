@@ -34,7 +34,7 @@ void FUN_022c2134(void)
     u16 rd;
 
     io[0] = 4;
-    sts = io[0xcc];
+    sts = *(vu16 *)0x048081a8;
 
     if ((*(u16 *)(ST + 0x690) & 8) && (sts & 0x400)) {
         f = io[0x50];

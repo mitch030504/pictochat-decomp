@@ -23,12 +23,13 @@ typedef struct Blk {
     unsigned short tag;   /* +0xa */
 } Blk;
 
+extern Ctx *G_0380fff4;
 extern int FUN_022c105c(int owner, Blk *blk);
 extern void FUN_022c5d90(void *heap, void *heapEnd, Blk *blk);
 
 int FUN_022c11b8(int owner, Blk *blk)
 {
-    Ctx *c = *(Ctx **)0x0380fff4;
+    Ctx *c = G_0380fff4;
     int r;
 
     if (blk->tag != 0xbf1d) {

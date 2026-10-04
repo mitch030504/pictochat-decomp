@@ -15,8 +15,8 @@ int FUN_022e0078(unsigned char *dst)
 {
     int n = 0;
     unsigned char *p = *(unsigned char **)0x0380fff4 + 0x344;
-    u16 len = *(u16 *)(p + 0x1e);
     unsigned int i;
+    u16 len = *(u16 *)(p + 0x1e);
 
     FUN_022d8d40(dst + n, 0);
     FUN_022d8d40(dst + 1, len);

@@ -24,7 +24,10 @@ void FUN_022df00c(int i, int unlink)
     int cmd = ((Queue *)(ST + 0x194))[i].head;
     int next;
 
-    while (cmd != -1) {
+    if (cmd == -1) {
+        return;
+    }
+    do {
         next = FUN_037c5b10(cmd);
         if (i != 2) {
             FUN_022d9bf0((u16 *)(cmd + 0x10));
@@ -34,5 +37,5 @@ void FUN_022df00c(int i, int unlink)
             FUN_022dded8(&((Queue *)(ST + 0x194))[i], cmd);
         }
         cmd = next;
-    }
+    } while (cmd != -1);
 }

@@ -41,7 +41,10 @@ void FUN_022ded7c(int id)
     }
     for (i = 0; i < 3; i++) {
         cmd = ((Queue *)(ST + 0x194))[i].head;
-        while (cmd != -1) {
+        if (cmd == -1) {
+            continue;
+        }
+        do {
             next = FUN_037c5b10(cmd);
             req = (u16 *)(cmd + 0x10);
             if (req[1] == id) {
@@ -59,6 +62,6 @@ void FUN_022ded7c(int id)
                 }
             }
             cmd = next;
-        }
+        } while (cmd != -1);
     }
 }

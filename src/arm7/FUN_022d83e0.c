@@ -17,10 +17,10 @@ int FUN_022d83e0(unsigned int n, const unsigned char *data)
 {
     unsigned char *state = *(unsigned char **)0x0380fff4;
     unsigned char *p = state + 0x344;
-    const unsigned char *ssid;
-    const unsigned char *mask;
     unsigned int len;
     unsigned int i;
+    const unsigned char *mask;
+    const unsigned char *ssid;
     unsigned char m;
     unsigned char b;
 
@@ -45,7 +45,7 @@ int FUN_022d83e0(unsigned int n, const unsigned char *data)
     for (i = 0; i < n; i++) {
         m = FUN_022d8d6c(mask++);
         b = FUN_022d8d6c(data++);
-        if ((b | m) != (FUN_022d8d6c(ssid++) | m)) {
+        if ((b | m) != (m | FUN_022d8d6c(ssid++))) {
             return 0;
         }
     }
