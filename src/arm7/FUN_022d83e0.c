@@ -1,5 +1,8 @@
 // decomp: module=arm7 addr=0x022d83e0 name=FUN_022d83e0
 // flags: -O4,s -noThumb
+// NONMATCHING: loop counter and SSID pointer swap callee-saved registers (r5/r7); all 24 declaration orders and u8/u16/int counters tried (div=6). Logic verified correct vs ROM; not
+// byte-matchable from C at mwccarm 2.0/sp1..sp2p4 (see notes/matching-style.md).
+// Counts as decompiled, not matched.
 // size: 0xd0 - the nominal 0xcc excludes the trailing pool word.
 //
 // Compares `n` bytes of a candidate SSID against the one configured in the
@@ -23,6 +26,7 @@ int FUN_022d83e0(unsigned int n, const unsigned char *data)
     const unsigned char *ssid;
     unsigned char m;
     unsigned char b;
+    unsigned char c;
 
     if (n > 0x20) {
         return 0;
@@ -45,7 +49,8 @@ int FUN_022d83e0(unsigned int n, const unsigned char *data)
     for (i = 0; i < n; i++) {
         m = FUN_022d8d6c(mask++);
         b = FUN_022d8d6c(data++);
-        if ((b | m) != (m | FUN_022d8d6c(ssid++))) {
+        c = FUN_022d8d6c(ssid++);
+        if ((b | m) != (c | m)) {
             return 0;
         }
     }

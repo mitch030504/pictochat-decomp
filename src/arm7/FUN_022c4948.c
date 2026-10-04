@@ -1,5 +1,8 @@
 // decomp: module=arm7 addr=0x022c4948 name=FUN_022c4948
 // flags: -O4,s -noThumb
+// NONMATCHING: the ROM materialises both store constants (1, 0) before the first store; mwcc emits mov/str/mov/strh; tried OSLockWord struct, volatile/plain, store order, static flag (div=4). Logic verified correct vs ROM; not
+// byte-matchable from C at mwccarm 2.0/sp1..sp2p4 (see notes/matching-style.md).
+// Counts as decompiled, not matched.
 // size: 0x74 - the nominal 0x68 excludes the three trailing pool words.
 //
 // One-time init of the ARM9/ARM7 handshake in shared main RAM: marks itself

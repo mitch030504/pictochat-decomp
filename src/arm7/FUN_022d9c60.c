@@ -1,5 +1,8 @@
 // decomp: module=arm7 addr=0x022d9c60 name=FUN_022d9c60
 // flags: -O4,s -noThumb
+// NONMATCHING: right size and shape; registers differ in both arms (the ROM keeps the state-slot address in r3 and reloads through it); volatile slot pointer is the closest spelling (div=19). Logic verified correct vs ROM; not
+// byte-matchable from C at mwccarm 2.0/sp1..sp2p4 (see notes/matching-style.md).
+// Counts as decompiled, not matched.
 // size: 0xe8 - the nominal 0xe4 excludes the trailing pool word.
 //
 // Records a new status for peer `peer` under the interrupt lock. A status
@@ -27,17 +30,20 @@ extern char *G_0380fff4;
 
 void FUN_022d9c60(int peer, unsigned int status)
 {
+    char *volatile *pp;
     int token = FUN_037c9084(0x01000000);
 
+    pp = (char *volatile *)&G_0380fff4;
+
     if (status < 0x40) {
-        *(u16 *)(ST + 0x530) |= 1 << peer;
-        *(u16 *)(ST + 0x532) |= 1 << peer;
-        if (*(u16 *)(ST + 0x350) == 1 && FUN_022da0e8(peer) != 0) {
+        *(u16 *)(*pp + 0x530) |= 1 << peer;
+        *(u16 *)(*pp + 0x532) |= 1 << peer;
+        if (*(u16 *)(*pp + 0x350) == 1 && FUN_022da0e8(peer) != 0) {
             FUN_022d9f7c(peer);
         }
     } else {
-        *(u16 *)(ST + 0x532) &= ~(1 << peer);
-        if ((*(u16 *)(ST + 0x52e) >> peer) & 1) {
+        *(u16 *)(*pp + 0x532) &= ~(1 << peer);
+        if ((*(u16 *)(*pp + 0x52e) >> peer) & 1) {
             FUN_022d9dc4(peer);
         }
     }

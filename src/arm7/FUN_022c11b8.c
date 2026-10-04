@@ -1,5 +1,8 @@
 // decomp: module=arm7 addr=0x022c11b8 name=FUN_022c11b8
 // flags: -O4,s -noThumb
+// NONMATCHING: the ROM loads the state-pointer address into r5 (the register c later lives in); mwcc picks ip for it; tried decl orders, two-step load, inline accessor, int-array fields, early return (div=2). Logic verified correct vs ROM; not
+// byte-matchable from C at mwccarm 2.0/sp1..sp2p4 (see notes/matching-style.md).
+// Counts as decompiled, not matched.
 // size: 0x80 - the nominal 0x78 excludes the two trailing pool words
 // (0x0380fff4 and the 0xbf1d tag).
 //

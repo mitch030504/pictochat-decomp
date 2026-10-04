@@ -1,5 +1,8 @@
 // decomp: module=arm7 addr=0x022e0078 name=FUN_022e0078
 // flags: -O4,s -noThumb
+// NONMATCHING: length and loop counter swap r6/r7; all 24 declaration orders, int/u16 counters and loop spellings tried (div=6). Logic verified correct vs ROM; not
+// byte-matchable from C at mwccarm 2.0/sp1..sp2p4 (see notes/matching-style.md).
+// Counts as decompiled, not matched.
 // size: 0x74 - the nominal 0x70 excludes the trailing pool word.
 //
 // Serialises the SSID element (id 0) at `dst` from the channel block at
