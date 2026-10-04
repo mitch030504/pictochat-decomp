@@ -13,21 +13,17 @@ extern unsigned char FUN_022d8d6c(const unsigned char *p);
 
 int FUN_022e0078(unsigned char *dst)
 {
-    int n;
+    int n = 0;
+    unsigned char *p = *(unsigned char **)0x0380fff4 + 0x344;
     unsigned int i;
-    u16 len;
-    unsigned char *p;
-
-    n = 0;
-    p = *(unsigned char **)0x0380fff4 + 0x344;
-    len = *(u16 *)(p + 0x1e);
+    u16 len = *(u16 *)(p + 0x1e);
 
     FUN_022d8d40(dst + n, 0);
     FUN_022d8d40(dst + 1, len);
     n += 2;
-    for (i = 0; i < len; i++) {
-        FUN_022d8d40(dst + n, FUN_022d8d6c(p + 0x20 + i));
-        n++;
+    i = 0;
+    while (i < len) {
+        FUN_022d8d40(dst + n++, FUN_022d8d6c(p + 0x20 + i++));
     }
     return n;
 }

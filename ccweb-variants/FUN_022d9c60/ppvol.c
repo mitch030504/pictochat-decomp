@@ -27,10 +27,10 @@ extern char *G_0380fff4;
 
 void FUN_022d9c60(int peer, unsigned int status)
 {
-    char **pp;
+    char *volatile *pp;
     int token = FUN_037c9084(0x01000000);
 
-    pp = &G_0380fff4;
+    pp = (char *volatile *)&G_0380fff4;
 
     if (status < 0x40) {
         *(u16 *)(*pp + 0x530) |= 1 << peer;

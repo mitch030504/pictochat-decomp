@@ -21,30 +21,26 @@ extern unsigned short FUN_022da0e8(int idx);
 extern void FUN_022d9f7c(int idx);
 extern void FUN_022d9dc4(int idx);
 
-extern char *G_0380fff4;
+extern char *volatile G_0380fff4;
 
 #define ST G_0380fff4
 
 void FUN_022d9c60(int peer, unsigned int status)
 {
-    char **pp;
     int token = FUN_037c9084(0x01000000);
 
-    pp = &G_0380fff4;
-
     if (status < 0x40) {
-        *(u16 *)(*pp + 0x530) |= 1 << peer;
-        *(u16 *)(*pp + 0x532) |= 1 << peer;
-        if (*(u16 *)(*pp + 0x350) == 1 && FUN_022da0e8(peer) != 0) {
+        *(u16 *)(ST + 0x530) |= 1 << peer;
+        *(u16 *)(ST + 0x532) |= 1 << peer;
+        if (*(u16 *)(ST + 0x350) == 1 && FUN_022da0e8(peer) != 0) {
             FUN_022d9f7c(peer);
         }
     } else {
-        *(u16 *)(*pp + 0x532) &= ~(1 << peer);
-        if ((*(u16 *)(*pp + 0x52e) >> peer) & 1) {
+        *(u16 *)(ST + 0x532) &= ~(1 << peer);
+        if ((*(u16 *)(ST + 0x52e) >> peer) & 1) {
             FUN_022d9dc4(peer);
         }
     }
-    pp = &G_0380fff4;
-    (*(Entry **)(*pp + 0x31c))[peer].status = status;
+    (*(Entry **)(ST + 0x31c))[peer].status = status;
     FUN_037c904c(token);
 }

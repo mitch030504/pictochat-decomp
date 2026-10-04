@@ -28,21 +28,20 @@ extern void FUN_022c5d90(void *heap, void *heapEnd, Blk *blk);
 
 int FUN_022c11b8(int owner, Blk *blk)
 {
-    Ctx *c = (Ctx *)0x0380fff4;
+    int *c = *(int **)0x0380fff4;
     int r;
 
-    c = *(Ctx **)c;
     if (blk->tag != 0xbf1d) {
         return 1;
     }
     r = FUN_022c105c(owner, blk);
     if (r == 0) {
-        switch (c->allocator) {
+        switch (c[0x5f]) {
         case 0:
-            FUN_022c5d90(c->heap, c->heapEnd, blk);
+            FUN_022c5d90((void *)c[0x60], (void *)c[0x61], blk);
             break;
         case 1:
-            ((void (*)(Blk *))c->heapEnd)(blk);
+            ((void (*)(Blk *))c[0x61])(blk);
             break;
         }
     }

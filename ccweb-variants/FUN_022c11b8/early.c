@@ -30,13 +30,15 @@ int FUN_022c11b8(int owner, Blk *blk)
 {
     Ctx *c = *(Ctx **)0x0380fff4;
     int r;
-    unsigned short tag = blk->tag;
 
-    if (tag != 0xbf1d) {
+    if (blk->tag != 0xbf1d) {
         return 1;
     }
     r = FUN_022c105c(owner, blk);
-    if (r == 0) {
+    if (r != 0) {
+        return r;
+    }
+    {
         switch (c->allocator) {
         case 0:
             FUN_022c5d90(c->heap, c->heapEnd, blk);

@@ -13,14 +13,10 @@ extern unsigned char FUN_022d8d6c(const unsigned char *p);
 
 int FUN_022e0078(unsigned char *dst)
 {
-    u16 len;
-    unsigned int i;
-    int n;
-    unsigned char *p;
-
-    n = 0;
-    p = *(unsigned char **)0x0380fff4 + 0x344;
-    len = *(u16 *)(p + 0x1e);
+    int n = 0;
+    unsigned char *p = *(unsigned char **)0x0380fff4 + 0x344;
+    u16 i;
+    u16 len = *(u16 *)(p + 0x1e);
 
     FUN_022d8d40(dst + n, 0);
     FUN_022d8d40(dst + 1, len);
