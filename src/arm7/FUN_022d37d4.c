@@ -1,6 +1,8 @@
 // decomp: module=arm7 addr=0x022d37d4 name=FUN_022d37d4
 // flags: -O4,s -noThumb
 // size: 0x124 - the nominal 0x118 excludes the three trailing pool words.
+// Matches under 2.0/sp2p2..sp2p4 only: sp1..sp2 cannot drop the zero high
+// word of the (s64)(int)x * 0x82ea multiply (notes/setup-mwccarm.md).
 //
 // Handles request 0x1d. Builds the configuration frame from the request's
 // first three words via FUN_022d061c; a non-zero status there is answered as

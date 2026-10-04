@@ -1,6 +1,8 @@
 //cpp
 // decomp: module=unk_autoload_0 addr=0x0232fc94 name=FUN_0232fc94
 // size: 0x90 - the nominal 0x8c excludes the trailing pool word.
+// The offset table is indexed off `(int *)arc + count + idx` with the 0x3c
+// header folded into the loads; spelling it as &arc->offs[...] costs an add.
 //
 // Loads member `idx` of an archive into the slot cache at +0x3c (FUN_023381cc
 // answers non-zero when it is already resident). The member's extent comes
@@ -39,9 +41,9 @@ int FUN_0232fc94(Arc *arc, unsigned int idx, void *src, void *heap)
         return 1;
     }
     last = FUN_023381a8(arc) - 1;
-    e = &arc->offs[arc->count + idx];
-    off = e[0];
-    len = ((idx < last) ? e[1] : arc->end) - off;
+    e = (int *)arc + (arc->count + idx);
+    off = e[15];
+    len = ((idx < last) ? e[16] : arc->end) - off;
     if (heap == 0) {
         return 0;
     }
